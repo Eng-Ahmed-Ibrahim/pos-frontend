@@ -1,0 +1,127 @@
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap');
+
+:root {
+    --bear-color: #8D6E63;
+    --bear-dark: #5D4037;
+    --bg-color: #fdf5e6;
+}
+
+
+.login .login-box {
+    background: white;
+    padding: 30px;
+    border-radius: 30px;
+    box-shadow: 0 15px 35px rgba(141, 110, 99, 0.2);
+    width: 340px;
+    position: relative;
+}
+
+/* 吹き出し */
+.login .bubble {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    background: #ff7043;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    opacity: 0;
+    transform: scale(0.5) rotate(15deg);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.login .bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #ff7043 transparent;
+}
+
+.login .is-covering .bubble {
+    opacity: 1;
+    transform: scale(1) rotate(5deg);
+}
+
+/* クマの表示エリア */
+.login .bear-container {
+    width: 180px;
+    height: 160px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.login .bear-svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* 視線の動き（なめらか設定） */
+.login #eyes {
+    transition: transform 0.6s ease-out;
+}
+
+/* 手の動き */
+.login .hand {
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-origin: center;
+}
+
+.login .hide-hands {
+    transform: translateY(50px);
+}
+
+/* パスワード入力時：目隠し */
+.login .is-covering .hand {
+    transform: translateY(-75px);
+}
+
+/* フォームのデザイン */
+.login .input-group {
+    margin-top: 15px;
+    text-align: left;
+}
+
+.login label {
+    display: block;
+    font-size: 14px;
+    color: #8D6E63;
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.login input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #efebe9;
+    border-radius: 15px;
+    box-sizing: border-box;
+    outline: none;
+    background: #fafafa;
+    transition: all 0.3s;
+}
+
+.login input:focus {
+    border-color: var(--bear-color);
+    background: white;
+}
+
+.login button {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--bear-color);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 16px;
+}
