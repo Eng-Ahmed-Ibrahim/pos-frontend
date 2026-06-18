@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-// import './CreateInvoice.css' // إعادة استخدام نفس الاستايل المستخدم فى صفحة فاتورة الشراء
 import './SaleInvoicePrint.css' // استايل الفاتورة نفسها + كلاسات التحكم فى الطباعة
 import ReceiptContent from './SaleInvoicePrint'
+import SaleInvoicePrint from './SaleInvoicePrint';
+import { apiFetch } from "@/Components/apiFetch";
 
 const API_BASE = import.meta.env.VITE_API_URL
+const token = localStorage.getItem("token");
 
 function PointOfSale() {
   const addSound = new Audio('./beep.mp3');
@@ -13,6 +15,7 @@ function PointOfSale() {
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [invoiceId, setInvoiceId] = useState('')
 
   // ---------- بيانات البيع ----------
   const [customerName, setCustomerName] = useState('')
@@ -35,6 +38,9 @@ function PointOfSale() {
   // الفاتورة اللى خلصت توها وعايزين نطبعها فى نفس الصفحة
   const [completedSale, setCompletedSale] = useState(null)
 
+  // فلاج بيمنعنا من استدعاء print() أكتر من مرة لنفس الفاتورة
+  const printTriggeredRef = useRef(false)
+
   // جلب المنتجات عند تحميل الصفحة، والتركيز على حقل البحث فورًا (جاهز للسكانر)
   useEffect(() => {
     fetchInitialData()
@@ -46,11 +52,30 @@ function PointOfSale() {
     }
   }, [loadingData])
 
+  // ⬇️ الإصلاح الأساسي: بنطبع لما تتجهز الفاتورة، وبس بعد ما نافذة الطباعة
+  // تقفل فعليًا (afterprint) بنصفّر الفورم. كروم بيكمل تنفيذ الكود بعد print()
+  // فورًا من غير ما ينتظر، فلازم نعتمد على الـ event ده مش على ترتيب الأسطر.
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      if (!printTriggeredRef.current) return
+      printTriggeredRef.current = false
+      setCompletedSale(null)
+      resetSaleForm()
+    }
+    window.addEventListener('afterprint', handleAfterPrint)
+    return () => window.removeEventListener('afterprint', handleAfterPrint)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+
   const fetchInitialData = async () => {
     setLoadingData(true)
     setError('')
     try {
-      const res = await fetch(`${API_BASE}/products`)
+      const res = await apiFetch(`products`, {
+        method: "GET",
+        
+      })
       const json = await res.json()
       if (json.status) {
         setProducts(json.data.products || [])
@@ -77,14 +102,12 @@ function PointOfSale() {
 
   const noResultsFound = searchTerm.trim() !== '' && !selectedProduct && searchResults.length === 0
 
-  // مطابقة كاملة (تامة) للباركود - هي اللي بتفرق بين "بحث جزئي بالاسم" و "سكان باركود حقيقي"
   const findExactBarcodeMatch = (value) => {
     const term = value.trim()
     if (!term) return null
     return products.find((p) => p.barcode && p.barcode === term) || null
   }
 
-  // الكمية المتاحة فعليًا لمنتج معين (المخزون مطروحًا منه ما هو موجود بالفعل فى السلة)
   const getRemainingStock = (product) => {
     const inCart = items.find((i) => i.product_id === product.id)?.quantity || 0
     return (product.stock ?? 0) - inCart
@@ -98,7 +121,6 @@ function PointOfSale() {
     requestAnimationFrame(() => searchInputRef.current?.focus())
   }
 
-  // إضافة المنتج فعليًا لسلة البيع (تُستخدم في الإضافة اليدوية وفي السكان التلقائي)
   const addItemToCart = (product, qty, price) => {
     setError('')
     if (!product) return
@@ -151,17 +173,14 @@ function PointOfSale() {
 
     setSuccessMsg(`تمت إضافة "${product.name}"`)
     addSound.play();
-
   }
 
-  // أي تغيير في حقل البحث - هنا بيتم اكتشاف السكان التلقائي
   const handleSearchChange = (value) => {
     setSearchTerm(value)
     setError('')
 
     const exact = findExactBarcodeMatch(value)
     if (exact) {
-      // باركود مطابق تمامًا = سكانر => بيع وحدة واحدة فورًا بسعر البيع المسجل للمنتج
       addItemToCart(exact, 1, exact.price ?? 0)
       resetSearchState()
       return
@@ -171,7 +190,6 @@ function PointOfSale() {
     setItemPrice('')
   }
 
-  // دعم السكانرات اللي بترسل Enter بعد الباركود، وكذلك الإضافة بالكيبورد فقط
   const handleSearchKeyDown = (e) => {
     if (e.key !== 'Enter') return
     e.preventDefault()
@@ -220,10 +238,8 @@ function PointOfSale() {
   const handleRemoveItem = (productId) => {
     addSound.play();
     setItems((prev) => prev.filter((i) => i.product_id !== productId))
-
   }
 
-  // تعديل الكمية أو السعر مباشرة من سلة البيع
   const handleUpdateItem = (productId, field, value) => {
     setItems((prev) =>
       prev.map((item) => {
@@ -247,22 +263,6 @@ function PointOfSale() {
     resetSearchState()
   }
 
-  // بمجرد ما الفاتورة المكتملة تتحط فى completedSale، الفاتورة بتترندر فى منطقة مخفية
-  // فى نفس الصفحة، وهذا الـ effect بيشغل الطباعة. window.print() فى أغلب المتصفحات
-  // (Chrome/Firefox) بتوقف تنفيذ الجافاسكريبت لحد ما المستخدم يقفل نافذة الطباعة،
-  // يعنى السطر اللى بعده (تصفير الفورم) بيتنفذ تلقائيًا أول ما الطباعة تخلص - فتكون
-  // الصفحة جاهزة للعميل اللى بعده على طول من غير أي خطوة إضافية
-  useEffect(() => {
-    if (completedSale) {
-      window.print()
-      setCompletedSale(null)
-      resetSaleForm()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completedSale])
-
-  // إتمام عملية البيع: حفظها فى السيرفر، ثم طباعة فاتورتها فى نفس الصفحة فورًا
-  // (الفورم بيتصفر تلقائيًا بعد ما الطباعة تخلص - راجع الـ effect اللى فوق)
   const handleCheckout = async () => {
     setError('')
     setSuccessMsg('')
@@ -274,10 +274,9 @@ function PointOfSale() {
 
     setSubmitting(true)
     try {
-      // عدّل المسار حسب الراوت الموجود لديك لإنشاء عملية بيع
-      const res = await fetch(`${API_BASE}/sales`, {
+      const res = await apiFetch(`sales`, {
+        headers:{"Content-Type": "application/json"},
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer_name: customerName || null,
           amount_paid: amountPaid === '' ? null : Number(amountPaid),
@@ -294,6 +293,7 @@ function PointOfSale() {
       if (json.status) {
         setSuccessMsg('تم إتمام عملية البيع بنجاح')
         setCompletedSale(json.data)
+        setInvoiceId(json.data.id)
       } else {
         setError(json.message || 'فشلت عملية البيع')
       }
@@ -302,6 +302,7 @@ function PointOfSale() {
       setError('حدث خطأ أثناء إتمام عملية البيع')
     } finally {
       setSubmitting(false)
+      resetSaleForm()
     }
   }
 
@@ -323,8 +324,6 @@ function PointOfSale() {
 
         {error && <div className="alert alert-error">{error}</div>}
         {successMsg && <div className="alert alert-success">{successMsg}</div>}
-
-
 
         <section className="card">
           <h4 className="card-title">المنتجات (سكان الباركود مباشر هنا)</h4>
@@ -509,9 +508,8 @@ function PointOfSale() {
         </div>
       </div>
 
-      {/* منطقة مخفية فى الوضع الطبيعي، وتظهر هى بس وقت الطباعة (راجع SaleInvoicePrint.css) */}
       <div className="pos-receipt-print-area" dir="rtl">
-        <ReceiptContent sale={completedSale} />
+        <SaleInvoicePrint invoiceId={invoiceId}  />
       </div>
     </>
   )

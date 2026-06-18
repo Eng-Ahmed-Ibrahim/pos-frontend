@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Swal from "sweetalert2";
 import { ThreeDot } from "react-loading-indicators";
+import { apiFetch } from "@/Components/apiFetch";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -15,6 +16,7 @@ function Suppliers() {
     const [editName, setEditName] = useState("");
     const [editPhone, setEditPhone] = useState("");
     const [editAddress, setEditAddress] = useState("");
+    const token = localStorage.getItem("token");
     useEffect(() => {
 
         fetchSuppliers();
@@ -23,7 +25,9 @@ function Suppliers() {
     const fetchSuppliers = async () => {
         try {
             setLoading(true)
-            const response = await fetch(`${API_BASE}/suppliers`)
+            const response = await apiFetch(`suppliers`, {
+                method: "GET",
+            })
             const data = await response.json()
             setSuppliers(data.suppliers)
         } catch (error) {
@@ -61,13 +65,10 @@ function Suppliers() {
             formData.append("phone", editPhone);
             formData.append("address", editAddress);
 
-            const response = await fetch(
-                `${API_BASE}/suppliers/${editId}`,
+            const response = await apiFetch(
+                `suppliers/${editId}`,
                 {
                     method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                    },
                     body: formData,
                 }
             );
@@ -110,13 +111,10 @@ function Suppliers() {
         try {
             setLoading(true);
 
-            const response = await fetch(
-                `${API_BASE}/suppliers/${id}`,
+            const response = await apiFetch(
+                `suppliers/${id}`,
                 {
                     method: "DELETE",
-                    headers: {
-                        Accept: "application/json",
-                    },
                 }
             );
 
@@ -157,9 +155,8 @@ function Suppliers() {
             formData.append('name', name)
             formData.append('phone', phone)
             formData.append('address', address)
-            const response = await fetch(`${API_BASE}/suppliers`, {
+            const response = await apiFetch(`suppliers`, {
                 method: "POST",
-                headers: { Accept: "application/json" },
                 body: formData
             })
 

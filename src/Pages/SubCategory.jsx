@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
+
 import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
+import { apiFetch } from "@/Components/apiFetch";
+
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 function SubCategory() {
@@ -12,7 +15,7 @@ function SubCategory() {
   const [modalMode, setModalMode] = useState('add')
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
-
+  const token = localStorage.getItem("token");
   // Edit states
   const [editId, setEditId] = useState(null)
   const [editName, setEditName] = useState('')
@@ -25,7 +28,9 @@ function SubCategory() {
   const fetchSubCategories = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${API_BASE}/sub-categories`)
+      const response = await apiFetch(`sub-categories`,{
+        method:"GET",
+      })
       const data = await response.json()
       setCategories(data.data['categories'])
       setSubCategories(data.data['sub_categories'])
@@ -47,9 +52,8 @@ function SubCategory() {
       formData.append("name", name);
       formData.append("category_id", categoryId)
 
-      const response = await fetch(`${API_BASE}/sub-categories`, {
+      const response = await apiFetch(`sub-categories`, {
         method: "POST",
-        headers: { Accept: "application/json" },
         body: formData
       })
       if (response.ok) {
@@ -87,9 +91,8 @@ function SubCategory() {
       formData.append("category_id", editCategoryId);
       formData.append("_method", "PUT");
 
-      const response = await fetch(`${API_BASE}/sub-categories/${editId}`, {
+      const response = await apiFetch(`sub-categories/${editId}`, {
         method: "POST",
-        headers: { Accept: "application/json" },
         body: formData
       })
       if (response.ok) {
@@ -119,9 +122,8 @@ function SubCategory() {
 
     try {
       setLoading(true)
-      const response = await fetch(`${API_BASE}/sub-categories/${id}`, {
+      const response = await apiFetch(`sub-categories/${id}`, {
         method: "DELETE",
-        headers: { Accept: "application/json" },
       })
       const data = await response.json();
       if (response.ok) {

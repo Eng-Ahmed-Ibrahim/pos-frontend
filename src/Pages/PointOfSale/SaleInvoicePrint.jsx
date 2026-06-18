@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import './styles.css'
+import './SaleInvoicePrint.css'
+import { apiFetch } from "@/Components/apiFetch";
+import logo from '/logo.PNG'
+
 const API_BASE = import.meta.env.VITE_API_URL
 
-function SaleInvoicePrint() {
-    const { id } = useParams()
+
+function SaleInvoicePrint({ invoiceId }) {
+    const params = useParams()
+    const id = invoiceId || params?.id
+    console.log(id);
+
     const [sale, setSale] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-
+    const token = localStorage.getItem("token");
     useEffect(() => {
-        fetchSale()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (id) {
+            fetchSale()
+        }
     }, [id])
 
     const fetchSale = async () => {
@@ -19,7 +27,9 @@ function SaleInvoicePrint() {
         setError('')
         try {
             // عدّل المسار حسب الراوت الموجود لديك لجلب بيانات عملية بيع واحدة
-            const res = await fetch(`${API_BASE}/sales/${id}`)
+            const res = await apiFetch(`sales/${id}`, {
+                method: "GET",
+            })
             const json = await res.json()
             if (json.status) {
                 setSale(json.sale || json.data)
@@ -61,9 +71,22 @@ function SaleInvoicePrint() {
             <div className="receipt">
                 <div className="receipt-header">
                     {/* عدّل اسم المتجر وبياناته هنا */}
+                    <div className='d-flex align-items-center justify-center'>
+                        <img style={{ width: "100px" }} src={logo} alt="" />
+                    </div>
                     <h2>هايبر دار ضباط المشاة</h2>
                     <p>فاتورة بيع رقم #{sale.id}</p>
-                    <p>{sale.created_at ? String(sale.created_at).slice(0, 16).replace('T', ' ') : ''}</p>
+                    <p>
+                        {sale.created_at
+                            ? new Date(sale.created_at).toLocaleDateString("en-GB") +
+                            " " +
+                            new Date(sale.created_at).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                            })
+                            : ""}
+                    </p>
                     {sale.customer_name && <p>العميل: {sale.customer_name}</p>}
                 </div>
 
@@ -107,6 +130,8 @@ function SaleInvoicePrint() {
                     )}
                 </div>
 
+                <p className="receipt-footer"> مدخل عمارات الشروق - بجوار النادى الاهلي  </p>
+                <p className="receipt-footer"> للمقترحات والشكاوي 01097570989  </p>
                 <p className="receipt-footer">شكرًا لتعاملكم معنا</p>
             </div>
 

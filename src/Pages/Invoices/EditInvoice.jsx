@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from "react-router-dom";
+import { apiFetch } from "@/Components/apiFetch";
 
 // عدّل هذا الرابط حسب رابط الـ API لديك
 // عدّل ده لو الصور متخزنة بمسار مختلف (مثلاً بعد عمل php artisan storage:link)
@@ -9,6 +10,8 @@ function EditInvoice() {
     const addSound = new Audio('/beep.mp3');
     const { id } = useParams();
     const navigate = useNavigate();
+      const token = localStorage.getItem("token");
+  
     // ---------- بيانات أساسية تُجلب من الخادم ----------
     const [categories, setCategories] = useState([])
     const [subCategories, setSubCategories] = useState([])
@@ -74,7 +77,9 @@ function EditInvoice() {
 
     const fetchInitialData = async () => {
         try {
-            const res = await fetch(`${API_BASE}/purchase/create-page`)
+            const res = await apiFetch(`purchase/create-page`,{
+                method:"GET",
+            })
             const json = await res.json()
             if (json.status) {
                 setCategories(json.data.categories || [])
@@ -92,7 +97,9 @@ function EditInvoice() {
     // جلب بيانات الفاتورة الحالية وتعبئة الفورم بيها
     const fetchPurchase = async () => {
         try {
-            const res = await fetch(`${API_BASE}/purchases/${id}`)
+            const res = await apiFetch(`purchases/${id}`,{
+                method:"GET",
+            })
             const json = await res.json()
             if (json.status) {
                 const purchase = json.purchase
@@ -288,9 +295,8 @@ function EditInvoice() {
         setError('')
         try {
             // عدّل المسار "/products" إذا كان مختلفًا في الباك إند لديك
-            const res = await fetch(`${API_BASE}/products`, {
+            const res = await apiFetch(`products`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: newProduct.name,
                     barcode: newProduct.barcode || null,
@@ -399,7 +405,7 @@ function EditInvoice() {
             });
 
             // عدّل هذا المسار لو الراوت الخاص بتحديث الفاتورة مختلف عندك
-            const res = await fetch(`${API_BASE}/purchases/${id}`, {
+            const res = await apiFetch(`purchases/${id}`, {
                 method: 'POST',
                 body: formData,
             });

@@ -63,7 +63,7 @@
 .receipt-footer {
   text-align: center;
   margin-top: 12px;
-  font-size: 12px;
+  font-size: 11px;
   color: #555;
 }
 
@@ -87,5 +87,27 @@
   .receipt {
     border: none;
     width: 100%;
+  }
+}
+.pos-receipt-print-area {
+  display: none;
+}
+
+@media print {
+  .pos-screen-only {
+    display: none !important;
+  }
+  .pos-receipt-print-area {
+    display: block !important;
+  }
+  .topbar{
+    display: none;
+  }
+  .sidebar{
+    display: none;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 0;
   }
 }

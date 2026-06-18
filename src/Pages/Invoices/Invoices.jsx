@@ -3,19 +3,34 @@ import { NavLink } from 'react-router-dom'
 import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
+import { apiFetch } from "@/Components/apiFetch";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 function Invoices() {
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const token = localStorage.getItem("token");
   useEffect(() => {
     fetchPurchases()
-  })
+  },[])
   const fetchPurchases = async () => {
-    const response = await fetch(`${API_BASE}/purchases`);
-    const data = await response.json()
-    setPurchases(data.purchases);
+
+    try {
+      setLoading(true)
+      const response = await apiFetch(`purchases`, {
+        method: "GET",
+      }
+      );
+      const data = await response.json()
+      setPurchases(data.purchases);
+    } catch (err) {
+      console.error(err);
+      setError('حدث خطأ أثناء حفظ التعديلات');
+    } finally {
+      setLoading(false);
+    }
   }
   const deletePurchaseduct = async (id) => {
     const result = await Swal.fire({
@@ -29,9 +44,8 @@ function Invoices() {
     if (!result.isConfirmed) return;
     const formData = new FormData();
     formData.append("_method", "DELETE");
-    const response = await fetch(`${API_BASE}/purchases/${id}`, {
+    const response = await apiFetch(`purchases/${id}`, {
       method: "POST",
-      headers: { Accept: "application/json" },
       body: formData
     });
 
@@ -47,7 +61,7 @@ function Invoices() {
 
   return (
     <>
-    
+
       <NavLink to="/invoices/create" className="mb-2 btn btn-primary" >
         اضافه فاتوره
       </NavLink>
@@ -107,7 +121,7 @@ function Invoices() {
               ) : (
                 <tr>
                   <td colSpan="6" style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
-                    لا يوجد منتجات
+                    لا يوجد فواتير
                   </td>
                 </tr>
               )}

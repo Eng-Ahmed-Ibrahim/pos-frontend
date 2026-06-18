@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import './CreateInvoice.css'
+import { apiFetch } from "@/Components/apiFetch";
 
 // عدّل هذا الرابط حسب رابط الـ API لديك
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 function CreateInvoice() {
     const addSound = new Audio('/beep.mp3');
-
+    const token = localStorage.getItem("token");
   // ---------- بيانات أساسية تُجلب من الخادم ----------
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
@@ -66,7 +67,10 @@ function CreateInvoice() {
     setLoadingData(true)
     setError('')
     try {
-      const res = await fetch(`${API_BASE}/purchase/create-page`)
+      const res = await apiFetch(`purchase/create-page`,{
+        method:"GET",
+        headers: { Accept: "application/json","Authorization": `Bearer ${token}` },
+      })
       const json = await res.json()
       if (json.status) {
         setCategories(json.data.categories || [])
@@ -250,9 +254,9 @@ function CreateInvoice() {
     setError('')
     try {
       // عدّل المسار "/products" إذا كان مختلفًا في الباك إند لديك
-      const res = await fetch(`${API_BASE}/products`, {
+      const res = await apiFetch(`products`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { Accept: "application/json","Content-Type": "application/json","Authorization": `Bearer ${token}` },
         body: JSON.stringify({
           name: newProduct.name,
           barcode: newProduct.barcode || null,
@@ -349,9 +353,10 @@ function CreateInvoice() {
         formData.append(`items[${index}][expire_date]`, item.expire_date);
       });
 
-      const res = await fetch(`${API_BASE}/purchases`, {
+      const res = await apiFetch(`purchases`, {
         method: 'POST',
         body: formData,
+        headers: { Accept: "application/json","Authorization": `Bearer ${token}` },
       });
 
       const json = await res.json();

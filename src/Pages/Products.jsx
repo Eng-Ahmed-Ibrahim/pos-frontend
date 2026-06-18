@@ -4,6 +4,8 @@ import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
+import { apiFetch } from "@/Components/apiFetch";
+
 function Products() {
 
     const [products, setProducts] = useState([]);
@@ -25,11 +27,13 @@ function Products() {
     const [editName, setEditName] = useState('');
     const [editProductId, setEditProductId] = useState('');
     const [editSubCategoryId, setEditSubCategoryId] = useState('');
-
+    const token = localStorage.getItem("token");
     const fetchProducts = async () => {
         try {
             setLoading(true)
-            const response = await fetch(`${API_BASE}/products`)
+            const response = await apiFetch(`products`,{
+                method:"GET",
+            })
             const data = await response.json();
             setCategories(data.data['categories'])
             setSubCategories(data.data['sub_categories'])
@@ -78,9 +82,8 @@ function Products() {
             formData.append('price',price)
             formData.append('minimum_stock',minimumStock)
             formData.append('barcode', barcodeNumber)
-            const response = await fetch(`${API_BASE}/products`, {
+            const response = await apiFetch(`products`, {
                 method: "POST",
-                headers: { Accept: "application/json" },
                 body: formData
             })
 
@@ -128,9 +131,8 @@ function Products() {
                 formData.append('sub_category_id', editSubCategoryId);
             }
             formData.append('barcode', editBarcodeNumber)
-            const response = await fetch(`${API_BASE}/products/${editProductId}`, {
+            const response = await apiFetch(`products/${editProductId}`, {
                 method: "POST",
-                headers: { Accept: "application/json" },
                 body: formData
             })
             if (response.ok) {
@@ -159,9 +161,8 @@ function Products() {
         });
         if (!result.isConfirmed) return;
         try {
-            const response = await fetch(`${API_BASE}/products/${id}`, {
+            const response = await apiFetch(`products/${id}`, {
                 method: "DELETE",
-                headers: { Accept: "application/json" },
             })
             if (response.ok) {
                 Swal.fire({ toast: true, position: "top-start", icon: "success", title: "تم الحذف بنجاح", showConfirmButton: false, timer: 2000 });

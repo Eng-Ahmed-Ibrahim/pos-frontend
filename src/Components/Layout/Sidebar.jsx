@@ -11,6 +11,8 @@ import {
     MdPeople,
     MdSecurity
 } from "react-icons/md";
+import { TbReportAnalytics } from "react-icons/tb";
+
 import logo from '/logo.PNG'
 import { CiLogout } from "react-icons/ci";
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -56,6 +58,11 @@ function Sidebar() {
                         <span className="icon"><MdLocalShipping /></span>
                         الموردين
                     </NavLink>
+
+                    <div className="nav-item" >
+                        <span className="icon"><TbReportAnalytics /></span>
+                        التقارير
+                    </div>
                 </div>
 
                 <div className="nav-section">

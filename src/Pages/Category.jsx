@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
+import { apiFetch } from "@/Components/apiFetch";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
-const API_BASE = import.meta.env.VITE_API_URL;
+
 function Category() {
     const [categories, setCategories] = useState([]);
     const [name, setName] = useState("");
@@ -16,7 +17,7 @@ function Category() {
     const [editImage, setEditImage] = useState(null);
     const [editPerviewImage, setEditPerviewImage] = useState(null);
     const [editSubmitLoading, setEditSubmitLoading] = useState(false);
-
+    const token = localStorage.getItem("token");
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -24,7 +25,9 @@ function Category() {
     const fetchCategories = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE}/categories`);
+            const response = await apiFetch("categories", { method: "GET" });
+
+
             const data = await response.json();
             setCategories(data.data);
         } catch (error) {
@@ -46,10 +49,9 @@ function Category() {
             formData.append("name", name);
             if (image) formData.append("image", image);
 
-            const response = await fetch(`${API_BASE}/categories`, {
+            const response = await apiFetch("categories", {
                 method: "POST",
-                body: formData,
-                headers: { Accept: "application/json" },
+                body: formData
             });
 
             if (response.ok) {
@@ -89,11 +91,15 @@ function Category() {
             formData.append("_method", "PUT");
             if (editImage) formData.append("image", editImage);
 
-            const response = await fetch(`${API_BASE}/categories/${editId}`, {
+            const response = await apiFetch(`categories/${editId}`,{
                 method: "POST",
-                body: formData,
-                headers: { Accept: "application/json" },
-            });
+                body: formData})
+            
+            // fetch(`${API_BASE}/categories/${editId}`, {
+            //     method: "POST",
+            //     body: formData,
+            //     headers: { Accept: "application/json", "Authorization": `Bearer ${token}` },
+            // });
 
             if (response.ok) {
                 Swal.fire({ toast: true, position: "top-start", icon: "success", title: "تم التعديل بنجاح", showConfirmButton: false, timer: 2000 });
@@ -122,9 +128,8 @@ function Category() {
 
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE}/categories/${id}`, {
+            const response = await apiFetch(`categories/${id}`, {
                 method: "DELETE",
-                headers: { Accept: "application/json" },
             });
             const data = await response.json();
 
@@ -233,7 +238,7 @@ function Category() {
                                     <input type="text" className="form-control" placeholder="الاسم" value={editName} onChange={(e) => setEditName(e.target.value)} />
                                 </div>
                                 <div className="col">
-                                    <img src={SERVER_BASE +  '/' + editPerviewImage} alt="" style={{ width: '50px' }} />
+                                    <img src={SERVER_BASE + '/' + editPerviewImage} alt="" style={{ width: '50px' }} />
                                     <input type="file" className="form-control" onChange={(e) => setEditImage(e.target.files[0])} />
                                 </div>
                             </div>
