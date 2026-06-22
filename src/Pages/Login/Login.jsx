@@ -1,12 +1,19 @@
 import { useState } from 'react'
 import './styles.css'
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import Swal from "sweetalert2";
+import { apiFetch } from "@/Components/apiFetch";
+
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [submitLoading, setSubmitLoading] = useState(false)
+
+    const { setAuthData } = useAuth();
+    
     const navigate = useNavigate();
     const submit = async () => {
         setSubmitLoading(true)
@@ -14,16 +21,21 @@ function Login() {
             const formData = new FormData();
             formData.append("email", email);
             formData.append("password", password);
-            const response = await fetch(`${API_BASE}/login`, {
+            const response = await apiFetch(`login`, {
                 method: "POST",
-                body: formData,
-                headers: { Accept: "application/json" },
+                body: formData
             })
             const data = await response.json();
 
             if (response.ok) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("name", data.user.name);
+
+                setAuthData({
+                    user: data.user,
+                    roles: data.roles,
+                    permissions: data.permissions,
+                });
                 Swal.fire({ toast: true, position: "top-start", icon: "success", title: "تم تسجيل الدخول بنجاح", showConfirmButton: false, timer: 2000 });
             } else {
                 Swal.fire({
@@ -39,7 +51,7 @@ function Login() {
             console.log("Error ", error);
         } finally {
             setSubmitLoading(false);
-            navigate('/')
+            window.location.href = "/login"; // يرجع لصفحة الدخول
         }
     }
     return (

@@ -36,11 +36,12 @@
   margin-bottom: 12px;
 }
 
-.receipt-table th,
-.receipt-table td {
+html body .receipt-table th,
+html body .receipt-table td {
   padding: 4px 2px;
   text-align: center;
   border-bottom: 1px dotted #ddd;
+  font-size: 11px !important;
 }
 
 .receipt-totals {
@@ -63,7 +64,7 @@
 .receipt-footer {
   text-align: center;
   margin-top: 12px;
-  font-size: 11px;
+  font-size: 10px;
   color: #555;
 }
 

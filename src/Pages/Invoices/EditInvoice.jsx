@@ -396,7 +396,7 @@ function EditInvoice() {
             if (image) {
                 formData.append('image', image);
             }
-
+ 
             items.forEach((item, index) => {
                 formData.append(`items[${index}][product_id]`, item.product_id);
                 formData.append(`items[${index}][quantity]`, item.quantity);

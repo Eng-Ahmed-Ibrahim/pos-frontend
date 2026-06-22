@@ -4,17 +4,19 @@ import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
 import { apiFetch } from "@/Components/apiFetch";
+import { useAuth } from "@/context/AuthContext";
+
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
-const API_BASE = import.meta.env.VITE_API_URL;
 function Invoices() {
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { can } = useAuth();
 
   const token = localStorage.getItem("token");
   useEffect(() => {
     fetchPurchases()
-  },[])
+  }, [])
   const fetchPurchases = async () => {
 
     try {
@@ -62,9 +64,11 @@ function Invoices() {
   return (
     <>
 
-      <NavLink to="/invoices/create" className="mb-2 btn btn-primary" >
-        اضافه فاتوره
-      </NavLink>
+      {can('invoices.create') && (
+        <NavLink to="/invoices/create" className="mb-2 btn btn-primary" >
+          اضافه فاتوره
+        </NavLink>
+      )}
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
           <ThreeDot color="#8B5E3C" size="medium" />
@@ -80,7 +84,9 @@ function Invoices() {
                 <th>المبلغ</th>
                 <th>صوره الفاتوره </th>
                 <th> تاريخ الفاتوره </th>
-                <th>الإجراءات</th>
+                {(can('invoices.delete') || can('invoices.edit')) && (
+                  <th>الإجراءات</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -101,21 +107,28 @@ function Invoices() {
                       </a>
                     </td>
                     <td>{purchase.date}</td>
+                    {(can('invoices.delete') || can('invoices.edit')) && (
 
-                    <td>
-                      <NavLink
-                        className="btn btn-ghost btn-sm btn-icon me-1"
-                        to={`/invoices/edit/${purchase.id}`}
-                      >
-                        <FiEdit2 />
-                      </NavLink>
-                      <button
-                        className="btn btn-danger btn-sm btn-icon mx-2"
-                        onClick={() => deletePurchaseduct(purchase.id)}
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </td>
+                      <td>
+                        {can('invoices.edit') && (
+
+                          <NavLink
+                            className="btn btn-ghost btn-sm btn-icon me-1"
+                            to={`/invoices/edit/${purchase.id}`}
+                          >
+                            <FiEdit2 />
+                          </NavLink>
+                        )}
+                        {can('invoices.delete') && (
+                          <button
+                            className="btn btn-danger btn-sm btn-icon mx-2"
+                            onClick={() => deletePurchaseduct(purchase.id)}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (

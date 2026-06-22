@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
-
+import { useAuth } from "@/context/AuthContext";
 function Dashboard() {
     const [count, setCount] = useState(0)
+    const { can, permissions } = useAuth();
 
     return (
         <>

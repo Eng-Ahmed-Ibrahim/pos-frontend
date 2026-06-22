@@ -13,7 +13,10 @@ export const apiFetch = async (url, options = {}) => {
 
     if (res.status === 401) {
         localStorage.clear(); // يمسح كل الكاش
-        window.location.href = "/login"; // يرجع لصفحة الدخول
+        if (window.location.pathname !== "/login") {
+
+            window.location.href = "/login"; // يرجع لصفحة الدخول
+        }
         return;
     }
 

@@ -5,6 +5,9 @@ import { ThreeDot } from "react-loading-indicators";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 import { apiFetch } from "@/Components/apiFetch";
+import { useAuth } from "@/context/AuthContext";
+import Pagination from "../Components/Pagination";
+import Barcode from "react-barcode";
 
 function Products() {
 
@@ -19,6 +22,9 @@ function Products() {
     const [subCategoryId, setSubCategoryId] = useState('');
     const [submitLoading, setSubmitLoading] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
+    const [page, setPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
 
     const [editCategoryId, setEditCategoryId] = useState('');
     const [editBarcodeNumber, setEditBarcodeNumber] = useState('');
@@ -27,27 +33,32 @@ function Products() {
     const [editName, setEditName] = useState('');
     const [editProductId, setEditProductId] = useState('');
     const [editSubCategoryId, setEditSubCategoryId] = useState('');
+    const { can } = useAuth();
     const token = localStorage.getItem("token");
-    const fetchProducts = async () => {
+    const fetchProducts = async (pageNumber = 1) => {
         try {
-            setLoading(true)
-            const response = await apiFetch(`products`,{
-                method:"GET",
-            })
-            const data = await response.json();
-            setCategories(data.data['categories'])
-            setSubCategories(data.data['sub_categories'])
-            setProducts(data.data['products'])
-            console.log("products ", products);
+            setLoading(true);
 
+            const response = await apiFetch(`products?page=${pageNumber}&search=${searchValue}`, {
+                method: "GET",
+            });
+
+            const data = await response.json();
+
+            setProducts(data.data.products);
+            setCategories(data.data.categories || []);
+            setSubCategories(data.data.sub_categories || []);
+
+            setPage(data.data.pagination.current_page);
+            setLastPage(data.data.pagination.last_page);
 
         } catch (error) {
-            console.log("error ", error);
-
+            console.log(error);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
+
     const openEditModal = (pro) => {
         setEditCategoryId(pro.category_id)
         setEditBarcodeNumber(pro.barcode)
@@ -58,8 +69,13 @@ function Products() {
         setEditPrice(pro.price)
     }
     useEffect(() => {
-        fetchProducts()
-    }, [])
+        fetchProducts(1);
+    }, []);
+
+    const handlePageChange = (newPage) => {
+        fetchProducts(newPage);
+    };
+
     const addProduct = async () => {
         if (!name?.trim() || !categoryId || !barcodeNumber) {
             Swal.fire({
@@ -79,8 +95,8 @@ function Products() {
             formData.append('category_id', categoryId)
             formData.append('sub_category_id', subCategoryId)
             formData.append('name', name)
-            formData.append('price',price)
-            formData.append('minimum_stock',minimumStock)
+            formData.append('price', price)
+            formData.append('minimum_stock', minimumStock)
             formData.append('barcode', barcodeNumber)
             const response = await apiFetch(`products`, {
                 method: "POST",
@@ -177,12 +193,40 @@ function Products() {
 
         }
     }
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchProducts(1, searchValue);
+        }, 500); // يستنى 500ms بعد آخر كتابة
+
+        return () => clearTimeout(timer);
+    }, [searchValue]);
     return (
         <>
-            <div className="mb-2 btn btn-primary" data-bs-toggle="modal" data-bs-target="#Modal">
-                اضافه منتج
-            </div>
+            <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 
+                {/* Left: Search */}
+                <div style={{ width: "300px", maxWidth: "100%" }}>
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="ابحث بالاسم أو الباركود..."
+                        onChange={(e) => setSearchValue(e.target.value)}
+
+                    />
+                </div>
+
+                {/* Right: Add Button */}
+                {can('products.create') && (
+                    <button
+                        className="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#Modal"
+                    >
+                        اضافه منتج
+                    </button>
+                )}
+
+            </div>
 
             {/* ===== TABLE ===== */}
             {loading ? (
@@ -190,66 +234,75 @@ function Products() {
                     <ThreeDot color="#8B5E3C" size="medium" />
                 </div>
             ) : (
-                <div className="table-wrapper">
-                    <table className="styled-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الاسم</th>
-                                <th>باركود</th>
-                                <th>سعر البيع</th>
-                                <th>الحد الامان</th>
-                                <th>الفئة الرئيسية</th>
-                                <th>اسم الفئة الفرعية</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.length > 0 ? (
-                                products.map((pro, index) => (
-                                    <tr key={pro.id}>
-                                        <td>{index + 1}</td>
-                                        <td>{pro.name}</td>
-                                        <td>{pro.barcode}</td>
-                                        <td>{pro.price}</td>
-                                        <td>{pro.minimum_stock}</td>
-                                        <td>{pro.category?.name}</td>
-                                        <td>
-                                            {
-                                                pro.sub_category?.name ? pro.sub_category?.name
-                                                    : (<span className="badge text-bg-secondary">لا يوجد</span>)
-                                            }
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn btn-ghost btn-sm btn-icon me-1"
-                                                onClick={() => openEditModal(pro)}
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editModal"
-                                            >
-                                                <FiEdit2 />
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm btn-icon mx-2"
-                                                onClick={() => deleteProduct(pro.id)}
-                                            >
-                                                <FiTrash2 />
-                                            </button>
+                <>
+                    <div className="table-wrapper">
+                        <table className="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>باركود</th>
+                                    <th>سعر البيع</th>
+                                    <th>الحد الامان</th>
+                                    <th>الفئة</th>
+                                    <th>الفرعية</th>
+                                    {(can('products.delete') || can('products.edit')) && (
+                                        <th>الإجراءات</th>
+                                    )}
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {products.length > 0 ? (
+                                    products.map((pro, index) => (
+                                        <tr key={pro.id}>
+                                            <td>{index + 1}</td>
+                                            <td>{pro.name}</td>
+                                            <td>
+                                                <Barcode
+                                                    value={pro.barcode}
+                                                    width={1}
+                                                    height={30}
+                                                    displayValue={true}
+                                                    fontSize={8}
+                                                />
+                                            </td>
+                                            <td>{pro.price}</td>
+                                            <td>{pro.minimum_stock}</td>
+                                            <td>{pro.category?.name}</td>
+                                            <td>{pro.sub_category?.name || "لا يوجد"}</td>
+                                            <td>
+                                                {can('products.edit') &&
+                                                    (<button className="btn btn-ghost btn-sm btn-icon me-1" onClick={() => openEditModal(pro)} data-bs-toggle="modal" data-bs-target="#editModal" >
+                                                        <FiEdit2 />
+                                                    </button>
+                                                    )}
+                                                {can('products.delete') &&
+                                                    (<button className="btn btn-danger btn-sm btn-icon mx-2" onClick={() => deleteProduct(pro.id)} >
+                                                        <FiTrash2 /> </button>
+                                                    )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: "center", padding: "2rem" }}>
+                                            لا يوجد منتجات
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
-                                        لا يوجد منتجات
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
+                    {/* PAGINATION COMPONENT */}
+                    <Pagination
+                        currentPage={page}
+                        lastPage={lastPage}
+                        onPageChange={handlePageChange}
+                    />
+                </>
+            )}
             {/* ===== ADD MODAL ===== */}
             <div className="modal fade" id="Modal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex={-1}>
                 <div className="modal-dialog">

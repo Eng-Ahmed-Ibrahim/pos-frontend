@@ -3,6 +3,8 @@ import Swal from "sweetalert2";
 import { ThreeDot } from "react-loading-indicators";
 import { apiFetch } from "@/Components/apiFetch";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
+
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 function Suppliers() {
@@ -17,6 +19,8 @@ function Suppliers() {
     const [editPhone, setEditPhone] = useState("");
     const [editAddress, setEditAddress] = useState("");
     const token = localStorage.getItem("token");
+    const { can } = useAuth();
+
     useEffect(() => {
 
         fetchSuppliers();
@@ -179,9 +183,12 @@ function Suppliers() {
     }
     return (
         <>
-            <div className="mb-2 btn btn-primary" data-bs-toggle="modal" data-bs-target="#Modal">
-                اضافه مورد
-            </div>
+            {can('suppliers.create') && (
+
+                <div className="mb-2 btn btn-primary" data-bs-toggle="modal" data-bs-target="#Modal">
+                    اضافه مورد
+                </div>
+            )}
             {/* ===== TABLE ===== */}
             {loading ? (
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
@@ -196,7 +203,9 @@ function Suppliers() {
                                 <th>اسم  </th>
                                 <th> رقم التلفون </th>
                                 <th> العنوان </th>
-                                <th>الإجراءات</th>
+                                {(can('suppliers.delete') || can('suppliers.edit')) && (
+                                    <th>الإجراءات</th>
+                                )}
                             </tr>
                         </thead>
                         <tbody>
@@ -208,22 +217,31 @@ function Suppliers() {
                                         <td>{supplier.phone}</td>
                                         <td>{supplier.address}</td>
 
-                                        <td>
-                                            <button
-                                                className="btn btn-ghost btn-sm btn-icon me-1"
-                                                onClick={() => openEditModal(supplier)}
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editModal"
-                                            >
-                                                <FiEdit2 />
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm btn-icon mx-2"
-                                                onClick={() => deleteSupplier(supplier.id)}
-                                            >
-                                                <FiTrash2 />
-                                            </button>
-                                        </td>
+                                        {(can('suppliers.delete') || can('suppliers.edit')) && (
+
+                                            <td>
+                                                {can('suppliers.edit') && (
+
+                                                    <button
+                                                        className="btn btn-ghost btn-sm btn-icon me-1"
+                                                        onClick={() => openEditModal(supplier)}
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editModal"
+                                                    >
+                                                        <FiEdit2 />
+                                                    </button>
+                                                )}
+                                                {can('suppliers.delete') && (
+
+                                                    <button
+                                                        className="btn btn-danger btn-sm btn-icon mx-2"
+                                                        onClick={() => deleteSupplier(supplier.id)}
+                                                    >
+                                                        <FiTrash2 />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             ) : (

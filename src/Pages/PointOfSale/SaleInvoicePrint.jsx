@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import './SaleInvoicePrint.css'
 import { apiFetch } from "@/Components/apiFetch";
-import logo from '/logo.PNG'
+import logo from '/black_logo.png'
+import Tafgeet from 'tafgeetjs';
 
 const API_BASE = import.meta.env.VITE_API_URL
 
@@ -31,8 +32,10 @@ function SaleInvoicePrint({ invoiceId }) {
                 method: "GET",
             })
             const json = await res.json()
+            console.log(json);
+
             if (json.status) {
-                setSale(json.sale || json.data)
+                setSale(json.data.sale || json.data)
             } else {
                 setError('تعذر تحميل بيانات الفاتورة')
             }
@@ -46,7 +49,7 @@ function SaleInvoicePrint({ invoiceId }) {
     // طباعة تلقائية فور تحميل بيانات الفاتورة بنجاح
     useEffect(() => {
         if (sale) {
-            const timer = setTimeout(() => window.print(), 300)
+            const timer = setTimeout(() => window.print(), 500)
             return () => clearTimeout(timer)
         }
     }, [sale])
@@ -102,7 +105,7 @@ function SaleInvoicePrint({ invoiceId }) {
                     <tbody>
                         {items.map((it) => (
                             <tr key={it.id || it.product_id}>
-                                <td>{it.product?.name || it.name}</td>
+                                <td >{it.product?.name || it.name}</td>
                                 <td>{it.quantity}</td>
                                 <td>{Number(it.price).toFixed(2)}</td>
                                 <td>{Number(it.total ?? it.quantity * it.price).toFixed(2)}</td>
@@ -122,6 +125,8 @@ function SaleInvoicePrint({ invoiceId }) {
                                 <span>المدفوع</span>
                                 <span>{amountPaid.toFixed(2)}</span>
                             </div>
+
+
                             <div className="receipt-total-row">
                                 <span>الباقى</span>
                                 <span>{change >= 0 ? change.toFixed(2) : '0.00'}</span>

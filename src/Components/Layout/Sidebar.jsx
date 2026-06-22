@@ -9,20 +9,28 @@ import {
     MdCategory,
     MdLayers,
     MdPeople,
-    MdSecurity
+    MdSecurity,
+    MdOutlineInventory
 } from "react-icons/md";
 import { TbReportAnalytics } from "react-icons/tb";
+import { PiKeyReturnLight } from "react-icons/pi";
+import { useAuth } from "../../context/AuthContext";
 
 import logo from '/logo.PNG'
 import { CiLogout } from "react-icons/ci";
+
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function Sidebar() {
     const [count, setCount] = useState(0)
+    const { can } = useAuth();
     const logout = () => {
         localStorage.clear()
         window.location.href = "/login";
     }
+    const name = localStorage.getItem("name");
+    const role = localStorage.getItem("role");
+
     return (
         <>
             <aside className="sidebar">
@@ -31,84 +39,148 @@ function Sidebar() {
                     <div className="logo-sub text-center"> هايبر دار ضباط المشاة </div>
                 </div>
 
-                <div className="nav-section">
-                    <div className="nav-label">الرئيسية</div>
+                {can('dashboard.view') && (
 
-                    <NavLink to="/" className={({ isActive }) =>
-                        isActive ? "nav-item active" : "nav-item"} >
-                        <span className="icon"><MdDashboard /></span>
+                    <div className="nav-section">
+                        <div className="nav-label">الرئيسية</div>
 
-                        لوحة التحكم
-                    </NavLink>
-                </div>
 
-                <div className="nav-section">
-                    <div className="nav-label">المبيعات</div>
+                        <NavLink to="/" className={({ isActive }) =>
+                            isActive ? "nav-item active" : "nav-item"} >
+                            <span className="icon"><MdDashboard /></span>
 
-                    <NavLink to="/point-of-sales" className="nav-item" >
-                        <span className="icon"><MdShoppingCart /></span>
-                        نقطة البيع
-                    </NavLink>
-
-                    <NavLink to="/invoices" className="nav-item" >
-                        <span className="icon"><MdReceipt /></span>
-                        الفواتير
-                    </NavLink>
-                    <NavLink to="/suppliers" className="nav-item" >
-                        <span className="icon"><MdLocalShipping /></span>
-                        الموردين
-                    </NavLink>
-
-                    <div className="nav-item" >
-                        <span className="icon"><TbReportAnalytics /></span>
-                        التقارير
+                            لوحة التحكم
+                        </NavLink>
                     </div>
-                </div>
+                )}
 
-                <div className="nav-section">
-                    <div className="nav-label">المنتجات</div>
-                    <NavLink
-                        to="/products"
-                        className={({ isActive }) =>
-                            isActive ? "nav-item active" : "nav-item"
-                        }
-                    >
-                        <span className="icon"><MdInventory /></span>
-                        المنتجات
-                    </NavLink>
-                    <NavLink to="/categories" className="nav-item" >
-                        <span className="icon"><MdCategory /></span>
-                        الفئات
-                    </NavLink>
+                {(
+                    can('point_of_sale.view') ||
+                    can('point_of_sale.return') ||
+                    can('invoices.view') ||
+                    can('suppliers.view') ||
+                    can('reports.view')
+                ) && (
+                        <div className="nav-section">
+                            <div className="nav-label">المبيعات</div>
 
-                    <NavLink to='/sub-categories' className="nav-item">
-                        <span className="icon"><MdLayers /></span>
-                        الفئات الفرعية
-                    </NavLink>
-                </div>
+                            {can('point_of_sale.view') && (
+                                <NavLink to="/point-of-sales" className="nav-item">
+                                    <span className="icon"><MdShoppingCart /></span>
+                                    نقطة البيع
+                                </NavLink>
+                            )}
 
-                <div className="nav-section">
-                    <div className="nav-label">إدارة المستخدمين</div>
+                            {can('point_of_sale.return') && (
+                                <NavLink to="/returns" className="nav-item">
+                                    <span className="icon"><MdReceipt /></span>
+                                    مرتجعات المبيعات
+                                </NavLink>
+                            )}
 
-                    <div className="nav-item" >
-                        <span className="icon"><MdPeople /></span>
-                        المستخدمين
+                            {can('invoices.view') && (
+                                <NavLink to="/invoices" className="nav-item">
+                                    <span className="icon"><MdReceipt /></span>
+                                    الفواتير
+                                </NavLink>
+                            )}
+
+                            {can('suppliers.view') && (
+                                <NavLink to="/suppliers" className="nav-item">
+                                    <span className="icon"><MdLocalShipping /></span>
+                                    الموردين
+                                </NavLink>
+                            )}
+
+                            {can('reports.view') && (
+                                <NavLink to="/reports" className="nav-item">
+                                    <span className="icon"><TbReportAnalytics /></span>
+                                    التقارير
+                                </NavLink>
+                            )}
+                            {can('reports.view') && (
+                                <NavLink to="/reports" className="nav-item">
+                                    <span className="icon"><MdOutlineInventory /></span>
+                                    جرد المخزن
+                                </NavLink>
+                            )}
+                        </div>
+                    )}
+                {(
+                    can('products.view') ||
+                    can('categories.view') ||
+                    can('sub_categories.view')
+                ) && (
+                        <div className="nav-section">
+                            <div className="nav-label">المنتجات</div>
+
+                            {can('products.view') && (
+                                <NavLink
+                                    to="/products"
+                                    className={({ isActive }) =>
+                                        isActive ? "nav-item active" : "nav-item"
+                                    }
+                                >
+                                    <span className="icon"><MdInventory /></span>
+                                    المنتجات
+                                </NavLink>
+                            )}
+
+                            {can('categories.view') && (
+                                <NavLink
+                                    to="/categories"
+                                    className={({ isActive }) =>
+                                        isActive ? "nav-item active" : "nav-item"
+                                    }
+                                >
+                                    <span className="icon"><MdCategory /></span>
+                                    الفئات
+                                </NavLink>
+                            )}
+
+                            {can('sub_categories.view') && (
+                                <NavLink
+                                    to="/sub-categories"
+                                    className={({ isActive }) =>
+                                        isActive ? "nav-item active" : "nav-item"
+                                    }
+                                >
+                                    <span className="icon"><MdLayers /></span>
+                                    الفئات الفرعية
+                                </NavLink>
+                            )}
+                        </div>
+                    )}
+                {(can('users.view') || can('roles.view')) && (
+                    <div className="nav-section">
+                        <div className="nav-label">إدارة المستخدمين</div>
+
+                        {can('users.view') && (
+                            <NavLink to="/users" className="nav-item">
+                                <span className="icon"><MdPeople /></span>
+                                المستخدمين
+                            </NavLink>
+                        )}
+
+                        {can('roles.view') && (
+                            <NavLink to="/roles" className="nav-item">
+                                <span className="icon"><MdSecurity /></span>
+                                الأدوار والصلاحيات
+                            </NavLink>
+                        )}
                     </div>
-
-                    <div className="nav-item" >
-                        <span className="icon"><MdSecurity /></span>
-                        الأدوار والصلاحيات
-                    </div>
-                </div>
+                )}
 
                 <div className="sidebar-footer">
                     <div className="user-card" style={{ justifyContent: 'space-between' }}>
                         <div className="user-card">
 
-                            <div className="avatar">AS</div>
+                            <div className="avatar">
+                                {`${name?.charAt(0) ?? ''}${role?.charAt(0) ?? ''}`.toUpperCase()}
+                            </div>
                             <div className="user-info">
-                                <div className="name">Admin</div>
-                                <div className="role">Super Admin</div>
+                                <div className="name">{name}</div>
+                                <div className="role">{role}</div>
                             </div>
                         </div>
 

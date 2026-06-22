@@ -4,8 +4,10 @@ import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
 import { apiFetch } from "@/Components/apiFetch";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
+import { useAuth } from "@/context/AuthContext";
 
 function Category() {
+    const { can } = useAuth();
     const [categories, setCategories] = useState([]);
     const [name, setName] = useState("");
     const [image, setImage] = useState(null);
@@ -91,10 +93,11 @@ function Category() {
             formData.append("_method", "PUT");
             if (editImage) formData.append("image", editImage);
 
-            const response = await apiFetch(`categories/${editId}`,{
+            const response = await apiFetch(`categories/${editId}`, {
                 method: "POST",
-                body: formData})
-            
+                body: formData
+            })
+
             // fetch(`${API_BASE}/categories/${editId}`, {
             //     method: "POST",
             //     body: formData,
@@ -155,9 +158,12 @@ function Category() {
 
     return (
         <>
-            <div className="mb-2 btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-                اضافه فئه جديده
-            </div>
+            {can('categories.create') && (
+
+                <div className="mb-2 btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                    اضافه فئه جديده
+                </div>
+            )}
 
             {loading ? (
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
@@ -176,17 +182,23 @@ function Category() {
                                 </div>
                                 <div className="product-actions">
                                     {/* ✅ data-bs-toggle على الزرار مباشرة */}
-                                    <button
-                                        onClick={() => openEditModal(p)}
-                                        className="btn btn-ghost btn-sm btn-icon"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editModal"
-                                    >
-                                        <FiEdit2 />
-                                    </button>
-                                    <button onClick={() => deleteCategory(p.id)} className="btn btn-danger btn-sm btn-icon">
-                                        <FiTrash2 />
-                                    </button>
+                                    {can('categories.edit') && (
+
+                                        <button
+                                            onClick={() => openEditModal(p)}
+                                            className="btn btn-ghost btn-sm btn-icon"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal"
+                                        >
+                                            <FiEdit2 />
+                                        </button>
+                                    )}
+                                    {can('categories.delete') && (
+
+                                        <button onClick={() => deleteCategory(p.id)} className="btn btn-danger btn-sm btn-icon">
+                                            <FiTrash2 />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))

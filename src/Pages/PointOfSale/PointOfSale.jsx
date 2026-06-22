@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import './SaleInvoicePrint.css' // استايل الفاتورة نفسها + كلاسات التحكم فى الطباعة
-import ReceiptContent from './SaleInvoicePrint'
 import SaleInvoicePrint from './SaleInvoicePrint';
 import { apiFetch } from "@/Components/apiFetch";
 
@@ -12,6 +11,8 @@ function PointOfSale() {
 
   // ---------- بيانات المنتجات ----------
   const [products, setProducts] = useState([])
+  const [productsByBarcode, setProductsByBarcode] = useState({})
+  
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -26,22 +27,20 @@ function PointOfSale() {
 
   // ---------- البحث عن منتج / السكانر ----------
   const [searchTerm, setSearchTerm] = useState('')
+  const [displaySearchTerm, setDisplaySearchTerm] = useState('')
+  
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [itemPrice, setItemPrice] = useState('')
 
   const searchInputRef = useRef(null)
   const quantityInputRef = useRef(null)
+  const debounceTimeoutRef = useRef(null)
 
   const [submitting, setSubmitting] = useState(false)
-
-  // الفاتورة اللى خلصت توها وعايزين نطبعها فى نفس الصفحة
   const [completedSale, setCompletedSale] = useState(null)
-
-  // فلاج بيمنعنا من استدعاء print() أكتر من مرة لنفس الفاتورة
   const printTriggeredRef = useRef(false)
 
-  // جلب المنتجات عند تحميل الصفحة، والتركيز على حقل البحث فورًا (جاهز للسكانر)
   useEffect(() => {
     fetchInitialData()
   }, [])
@@ -52,9 +51,6 @@ function PointOfSale() {
     }
   }, [loadingData])
 
-  // ⬇️ الإصلاح الأساسي: بنطبع لما تتجهز الفاتورة، وبس بعد ما نافذة الطباعة
-  // تقفل فعليًا (afterprint) بنصفّر الفورم. كروم بيكمل تنفيذ الكود بعد print()
-  // فورًا من غير ما ينتظر، فلازم نعتمد على الـ event ده مش على ترتيب الأسطر.
   useEffect(() => {
     const handleAfterPrint = () => {
       if (!printTriggeredRef.current) return
@@ -64,21 +60,29 @@ function PointOfSale() {
     }
     window.addEventListener('afterprint', handleAfterPrint)
     return () => window.removeEventListener('afterprint', handleAfterPrint)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
 
   const fetchInitialData = async () => {
     setLoadingData(true)
     setError('')
     try {
-      const res = await apiFetch(`products`, {
+      const res = await apiFetch(`point-of-sale/products`, {
         method: "GET",
-        
       })
       const json = await res.json()
       if (json.status) {
-        setProducts(json.data.products || [])
+        const fetchedProducts = json.data.products || [];
+        setProducts(fetchedProducts);
+
+        const barcodeMap = {};
+        fetchedProducts.forEach(p => {
+          if (p.barcode) {
+            // تنظيف الباركود وتخزينه كمفتاح
+            barcodeMap[p.barcode.toString().trim()] = p;
+          }
+        });
+        setProductsByBarcode(barcodeMap);
+
       } else {
         setError('فشل تحميل بيانات الصفحة')
       }
@@ -89,32 +93,40 @@ function PointOfSale() {
     }
   }
 
-  // نتائج البحث (بالاسم أو الباركود) - فلترة محلية من المنتجات المحملة
-  const searchResults = (() => {
-    const term = searchTerm.trim().toLowerCase()
+  const searchResults = useMemo(() => {
+    const term = displaySearchTerm.trim().toLowerCase() // الاعتماد على القيمة المعروضة للفلترة الفورية للـ Dropdown
     if (!term || selectedProduct) return []
-    return products.filter(
-      (p) =>
-        p.barcode?.toLowerCase().includes(term) ||
-        p.name?.toLowerCase().includes(term)
-    )
-  })()
+    
+    const filtered = [];
+    for (let i = 0; i < products.length; i++) {
+      const p = products[i];
+      if (p.barcode?.toString().toLowerCase().includes(term) || p.name?.toLowerCase().includes(term)) {
+        filtered.push(p);
+        if (filtered.length >= 12) break;
+      }
+    }
+    return filtered;
+  }, [displaySearchTerm, products, selectedProduct]);
 
-  const noResultsFound = searchTerm.trim() !== '' && !selectedProduct && searchResults.length === 0
+  const noResultsFound = displaySearchTerm.trim() !== '' && !selectedProduct && searchResults.length === 0
 
   const findExactBarcodeMatch = (value) => {
     const term = value.trim()
     if (!term) return null
-    return products.find((p) => p.barcode && p.barcode === term) || null
+    return productsByBarcode[term] || null
   }
 
+  // ⚡ تعديل أمان: حماية حساب المخزون من الـ undefined والـ null
   const getRemainingStock = (product) => {
+    if (!product) return 0;
+    const availableStock = Number(product.stock) || 0; // تحويل لأرقام لتفادي الـ undefined
     const inCart = items.find((i) => i.product_id === product.id)?.quantity || 0
-    return (product.stock ?? 0) - inCart
+    return availableStock - inCart
   }
 
   const resetSearchState = () => {
     setSearchTerm('')
+    setDisplaySearchTerm('')
     setSelectedProduct(null)
     setItemPrice('')
     setQuantity(1)
@@ -127,6 +139,7 @@ function PointOfSale() {
 
     const quantityNum = Number(qty)
     const priceNum = Number(price)
+    const productStock = Number(product.stock) || 0; // ⚡ تأمين الـ stock هنا كعدد
 
     if (!quantityNum || quantityNum <= 0) {
       setError('الكمية غير صحيحة')
@@ -139,8 +152,10 @@ function PointOfSale() {
 
     const existing = items.find((i) => i.product_id === product.id)
     const currentQtyInCart = existing?.quantity || 0
-    if (currentQtyInCart + quantityNum > (product.stock ?? 0)) {
-      setError(`الكمية المطلوبة أكبر من المخزون المتاح (${product.stock} فقط)`)
+    
+    // ⚡ المقارنة الآمنة للمخزون لمنع رسالة الـ undefined الكاذبة
+    if (currentQtyInCart + quantityNum > productStock) {
+      setError(`الكمية المطلوبة أكبر من المخزون المتاح (${productStock} فقط)`)
       return
     }
 
@@ -163,7 +178,7 @@ function PointOfSale() {
           product_id: product.id,
           name: product.name,
           barcode: product.barcode,
-          stock: product.stock,
+          stock: productStock,
           quantity: quantityNum,
           price: priceNum,
           subtotal: quantityNum * priceNum,
@@ -176,14 +191,19 @@ function PointOfSale() {
   }
 
   const handleSearchChange = (value) => {
-    setSearchTerm(value)
+    setDisplaySearchTerm(value) 
     setError('')
 
-    const exact = findExactBarcodeMatch(value)
-    if (exact) {
-      addItemToCart(exact, 1, exact.price ?? 0)
-      resetSearchState()
-      return
+    // منع البحث التلقائي الفوري إلا إذا كان طول النص كبيراً (حماية السكانر)
+    // أجهزة السكانر تقرأ الباركود كاملاً دفعة واحدة (غالباً أكثر من 4 خانات)
+    if (value.trim().length >= 4) {
+      const exact = findExactBarcodeMatch(value)
+      if (exact) {
+        if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
+        addItemToCart(exact, 1, exact.price ?? 0)
+        resetSearchState()
+        return
+      }
     }
 
     setSelectedProduct(null)
@@ -199,7 +219,8 @@ function PointOfSale() {
       return
     }
 
-    const exact = findExactBarcodeMatch(searchTerm)
+    // عند الضغط على Enter، يتم الفحص فوراً حتى لو كان الحرف واحداً
+    const exact = findExactBarcodeMatch(displaySearchTerm)
     if (exact) {
       addItemToCart(exact, 1, exact.price ?? 0)
       resetSearchState()
@@ -213,6 +234,7 @@ function PointOfSale() {
 
   const handleSelectProduct = (product) => {
     setSelectedProduct(product)
+    setDisplaySearchTerm(product.name)
     setSearchTerm(product.name)
     setItemPrice(product.price ?? 0)
     setQuantity(1)
@@ -309,7 +331,7 @@ function PointOfSale() {
   if (loadingData) {
     return (
       <div className="invoice-page pos-screen-only" dir="rtl">
-        <p className="loading-text">جاري تحميل البيانات...</p>
+        <p className="loading-text">جاري تحميل البيانات </p>
       </div>
     )
   }
@@ -334,7 +356,7 @@ function PointOfSale() {
               <input
                 ref={searchInputRef}
                 type="text"
-                value={searchTerm}
+                value={displaySearchTerm} 
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="اسكان الباركود أو اكتب اسم المنتج..."
@@ -347,7 +369,7 @@ function PointOfSale() {
                     <div key={p.id} className="dropdown-item" onClick={() => handleSelectProduct(p)}>
                       <span className="dropdown-item-name">{p.name}</span>
                       <span className="dropdown-item-barcode">
-                        {p.barcode || '-'} • متاح: {p.stock}
+                        {p.barcode || '-'} • متاح: {p.stock ?? 0}
                       </span>
                     </div>
                   ))}
@@ -515,4 +537,4 @@ function PointOfSale() {
   )
 }
 
-export default PointOfSale
+export default PointOfSale;

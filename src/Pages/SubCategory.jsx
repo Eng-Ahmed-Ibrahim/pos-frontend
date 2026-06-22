@@ -4,10 +4,12 @@ import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
 import { apiFetch } from "@/Components/apiFetch";
+import { useAuth } from "@/context/AuthContext";
 
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 function SubCategory() {
+  const { can } = useAuth();
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [name, setName] = useState('');
@@ -28,8 +30,8 @@ function SubCategory() {
   const fetchSubCategories = async () => {
     try {
       setLoading(true)
-      const response = await apiFetch(`sub-categories`,{
-        method:"GET",
+      const response = await apiFetch(`sub-categories`, {
+        method: "GET",
       })
       const data = await response.json()
       setCategories(data.data['categories'])
@@ -148,9 +150,12 @@ function SubCategory() {
 
   return (
     <>
-      <div className="mb-3 btn btn-primary" onClick={() => setModalMode('add')} data-bs-toggle="modal" data-bs-target="#Modal">
-        اضافه فئه فرعيه جديده
-      </div>
+      {can('sub_categories.create') && (
+
+        <div className="mb-3 btn btn-primary" onClick={() => setModalMode('add')} data-bs-toggle="modal" data-bs-target="#Modal">
+          اضافه فئه فرعيه جديده
+        </div>
+      )}
 
       {/* ===== TABLE ===== */}
       {loading ? (
@@ -165,7 +170,10 @@ function SubCategory() {
                 <th>#</th>
                 <th>اسم الفئة الفرعية</th>
                 <th>الفئة الرئيسية</th>
-                <th>الإجراءات</th>
+                {(can('sub_categories.eidt') || can('sub_categories.delete')) && (
+
+                  <th>الإجراءات</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -179,22 +187,31 @@ function SubCategory() {
                         {categories.find(c => c.id === sub.category_id)?.name || '—'}
                       </span>
                     </td>
-                    <td>
-                      <button
-                        className="btn btn-ghost btn-sm btn-icon me-1"
-                        onClick={() => openEditModal(sub)}
-                        data-bs-toggle="modal"
-                        data-bs-target="#editModal"
-                      >
-                        <FiEdit2 />
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm btn-icon mx-2"
-                        onClick={() => deleteSubCategory(sub.id)}
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </td>
+                    {(can('sub_categories.eidt') || can('sub_categories.delete')) && (
+
+                      <td>
+                        {can('sub_categories.edit') && (
+
+                          <button
+                            className="btn btn-ghost btn-sm btn-icon me-1"
+                            onClick={() => openEditModal(sub)}
+                            data-bs-toggle="modal"
+                            data-bs-target="#editModal"
+                          >
+                            <FiEdit2 />
+                          </button>
+                        )}
+                        {can('sub_categories.delete') && (
+
+                          <button
+                            className="btn btn-danger btn-sm btn-icon mx-2"
+                            onClick={() => deleteSubCategory(sub.id)}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
