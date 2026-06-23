@@ -112,7 +112,7 @@ function Returned() {
     try {
       const res = await apiFetch(`sales/${sale.id}/return`, {
         method: 'POST',
-
+        headers:{"Content-Type": "application/json"},
         body: JSON.stringify({
           reason: reason || null,
           items: selectedItems.map((item) => ({

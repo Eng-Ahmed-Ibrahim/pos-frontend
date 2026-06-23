@@ -19,6 +19,7 @@ import Users from './Pages/Users';
 import { AuthProvider } from './context/AuthContext';
 import Roles from './Pages/Roles';
 import Reports from './Pages/Reports';
+import Settings from './Pages/Settings/Settings';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
             <Route path="/users" element={<Users />} />
             <Route path="/roles" element={<Roles />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
 
             <Route path="/sales/:id/print" element={<SaleInvoicePrint />} />
           </Route>

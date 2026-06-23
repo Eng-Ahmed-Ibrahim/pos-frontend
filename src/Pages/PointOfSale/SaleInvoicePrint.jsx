@@ -3,7 +3,11 @@ import { useParams } from 'react-router-dom'
 import './SaleInvoicePrint.css'
 import { apiFetch } from "@/Components/apiFetch";
 import logo from '/black_logo.png'
-import Tafgeet from 'tafgeetjs';
+import { useAuth } from "../../context/AuthContext";
+
+const VITE_SERVER_BASE = import.meta.env.VITE_SERVER_BASE
+const invoice_logo = `${VITE_SERVER_BASE}/uploads/settings/invoice_logo.png`
+
 
 const API_BASE = import.meta.env.VITE_API_URL
 
@@ -12,6 +16,7 @@ function SaleInvoicePrint({ invoiceId }) {
     const params = useParams()
     const id = invoiceId || params?.id
     console.log(id);
+    const { systemSetting} = useAuth();
 
     const [sale, setSale] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -75,9 +80,9 @@ function SaleInvoicePrint({ invoiceId }) {
                 <div className="receipt-header">
                     {/* عدّل اسم المتجر وبياناته هنا */}
                     <div className='d-flex align-items-center justify-center'>
-                        <img style={{ width: "100px" }} src={logo} alt="" />
+                        <img style={{ width: "100px" }} src={invoice_logo} alt="" />
                     </div>
-                    <h2>هايبر دار ضباط المشاة</h2>
+                    <h2> {systemSetting('system_name')}  </h2>
                     <p>فاتورة بيع رقم #{sale.id}</p>
                     <p>
                         {sale.created_at
@@ -135,8 +140,8 @@ function SaleInvoicePrint({ invoiceId }) {
                     )}
                 </div>
 
-                <p className="receipt-footer"> مدخل عمارات الشروق - بجوار النادى الاهلي  </p>
-                <p className="receipt-footer"> للمقترحات والشكاوي 01097570989  </p>
+                <p className="receipt-footer"> {systemSetting('invoice_address')} </p>
+                <p className="receipt-footer"> للمقترحات والشكاوي {systemSetting('invoice_phone')}  </p>
                 <p className="receipt-footer">شكرًا لتعاملكم معنا</p>
             </div>
 

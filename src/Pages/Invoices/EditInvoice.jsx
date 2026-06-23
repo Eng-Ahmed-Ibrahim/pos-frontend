@@ -1,17 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useParams, useNavigate } from "react-router-dom";
 import { apiFetch } from "@/Components/apiFetch";
+import Swal from "sweetalert2";
 
-// عدّل هذا الرابط حسب رابط الـ API لديك
-// عدّل ده لو الصور متخزنة بمسار مختلف (مثلاً بعد عمل php artisan storage:link)
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
+
 function EditInvoice() {
     const addSound = new Audio('/beep.mp3');
     const { id } = useParams();
     const navigate = useNavigate();
-      const token = localStorage.getItem("token");
-  
+
     // ---------- بيانات أساسية تُجلب من الخادم ----------
     const [categories, setCategories] = useState([])
     const [subCategories, setSubCategories] = useState([])
@@ -25,15 +24,19 @@ function EditInvoice() {
     // ---------- بيانات الفاتورة (الهيدر) ----------
     const [supplierId, setSupplierId] = useState('')
     const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10))
-    const [invoiceNumber, setInvoiceNumber] = useState('') // ملاحظات / رقم فاتورة المورد - يُحفظ فى حقل notes
-    const [image, setImage] = useState(null) // ملف صورة جديد لو المستخدم غيّر الصورة
-    const [existingImage, setExistingImage] = useState(null) // مسار الصورة الحالية القادمة من السيرفر
+    const [invoiceNumber, setInvoiceNumber] = useState('')
+    const [image, setImage] = useState(null)
+    const [existingImage, setExistingImage] = useState(null)
 
     // ---------- أصناف الفاتورة ----------
     const [items, setItems] = useState([])
 
     // ---------- البحث عن منتج / السكانر ----------
     const [searchTerm, setSearchTerm] = useState('')
+    // ميزة الـ Transition من React 18 تمنع تهنيج واجهة المستخدم أثناء فلترة الأعداد الضخمة
+    const [isSearching, startTransition] = useTransition()
+    const [filteredProducts, setFilteredProducts] = useState([])
+
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [quantity, setQuantity] = useState(1)
     const [itemPrice, setItemPrice] = useState('')
@@ -57,7 +60,7 @@ function EditInvoice() {
 
     const [submitting, setSubmitting] = useState(false)
 
-    // جلب بيانات الصفحة (الأقسام/الموردين/المنتجات) + بيانات الفاتورة المطلوب تعديلها
+    // جلب بيانات الصفحة
     useEffect(() => {
         const init = async () => {
             setLoading(true)
@@ -66,7 +69,6 @@ function EditInvoice() {
             setLoading(false)
         }
         init()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
 
     useEffect(() => {
@@ -75,11 +77,34 @@ function EditInvoice() {
         }
     }, [loading])
 
+    // فلترة المنتجات بأداء عالي جداً مع تحديد الحد الأقصى للعرض بـ 15 عنصر فقط
+    useEffect(() => {
+        const term = searchTerm.trim().toLowerCase();
+        if (!term || selectedProduct) {
+            setFilteredProducts([]);
+            return;
+        }
+
+        // استخدام startTransition لضمان سلاسة الكتابة في الحقل بدون تجميد المتصفح
+        startTransition(() => {
+            const results = [];
+            for (let i = 0; i < products.length; i++) {
+                const p = products[i];
+                if (
+                    (p.barcode && p.barcode.toLowerCase().includes(term)) ||
+                    (p.name && p.name.toLowerCase().includes(term))
+                ) {
+                    results.push(p);
+                    if (results.length >= 15) break; // إيقاف الحلقة فوراً عند إيجاد أول 15 صنف للأداء الكلي
+                }
+            }
+            setFilteredProducts(results);
+        });
+    }, [searchTerm, products, selectedProduct]);
+
     const fetchInitialData = async () => {
         try {
-            const res = await apiFetch(`purchase/create-page`,{
-                method:"GET",
-            })
+            const res = await apiFetch(`purchase/create-page`, { method: "GET" })
             const json = await res.json()
             if (json.status) {
                 setCategories(json.data.categories || [])
@@ -94,12 +119,9 @@ function EditInvoice() {
         }
     }
 
-    // جلب بيانات الفاتورة الحالية وتعبئة الفورم بيها
     const fetchPurchase = async () => {
         try {
-            const res = await apiFetch(`purchases/${id}`,{
-                method:"GET",
-            })
+            const res = await apiFetch(`purchases/${id}`, { method: "GET" })
             const json = await res.json()
             if (json.status) {
                 const purchase = json.purchase
@@ -130,26 +152,8 @@ function EditInvoice() {
         }
     }
 
-    // نتائج البحث (بالاسم أو الباركود) - فلترة محلية من المنتجات المحملة
-    const searchResults = (() => {
-        const term = searchTerm.trim().toLowerCase()
-        if (!term || selectedProduct) return []
-        return products.filter(
-            (p) =>
-                p.barcode?.toLowerCase().includes(term) ||
-                p.name?.toLowerCase().includes(term)
-        )
-    })()
-
     const noResultsFound =
-        searchTerm.trim() !== '' && !selectedProduct && searchResults.length === 0 && !showNewProductForm
-
-    // مطابقة كاملة (تامة) للباركود - هي اللي بتفرق بين "بحث جزئي بالاسم" و "سكان باركود حقيقي"
-    const findExactBarcodeMatch = (value) => {
-        const term = value.trim()
-        if (!term) return null
-        return products.find((p) => p.barcode && p.barcode === term) || null
-    }
+        searchTerm.trim() !== '' && !selectedProduct && filteredProducts.length === 0 && !showNewProductForm
 
     const resetSearchState = () => {
         setSearchTerm('')
@@ -158,10 +162,11 @@ function EditInvoice() {
         setItemExpireDate(new Date().toISOString().slice(0, 10))
         setQuantity(1)
         setShowNewProductForm(false)
+        setFilteredProducts([])
         requestAnimationFrame(() => searchInputRef.current?.focus())
     }
 
-    // إضافة المنتج فعليًا لجدول الفاتورة (تُستخدم في الإضافة اليدوية وفي السكان التلقائي)
+    // إضافة المنتج لجدول الفاتورة (مع جعل الجديد يظهر في البداية)
     const addItemToInvoice = (product, qty, price, expireDate) => {
         setError('')
         if (!product) return
@@ -170,11 +175,25 @@ function EditInvoice() {
         const priceNum = Number(price)
 
         if (!quantityNum || quantityNum <= 0) {
-            setError('الكمية غير صحيحة')
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'الكمية غير صحيحة',
+                showConfirmButton: false,
+                timer: 3000,
+            });
             return
         }
         if (price === '' || price === null || Number.isNaN(priceNum) || priceNum < 0) {
-            setError('سعر الشراء غير صحيح')
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'سعر الشراء غير صحيح',
+                showConfirmButton: false,
+                timer: 3000,
+            });
             return
         }
 
@@ -190,10 +209,11 @@ function EditInvoice() {
                     expire_date: expireDate,
                     subtotal: newQty * priceNum,
                 }
+                // نقل العنصر المُحدث لأعلى القائمة إذا كنت تفضل ذلك، أو تركه في مكانه
                 return updated
             }
+            // إضافة الصنف الجديد تماماً في أول المصفوفة هنا [عنصر جديد، ...العناصر القديمة]
             return [
-                ...prev,
                 {
                     product_id: product.id,
                     name: product.name,
@@ -203,57 +223,59 @@ function EditInvoice() {
                     expire_date: expireDate,
                     subtotal: quantityNum * priceNum,
                 },
+                ...prev,
             ]
         })
 
-        setSuccessMsg(`تمت إضافة "${product.name}" للفاتورة`)
+        Swal.fire({
+            toast: true,
+            position: "center",
+            icon: "success",
+            title: `تمت إضافة "${product.name}" للفاتورة`,
+            showConfirmButton: false,
+            timer: 3000,
+        });
         addSound.play()
     }
 
-    // أي تغيير في حقل البحث - هنا بيتم اكتشاف السكان التلقائي
     const handleSearchChange = (value) => {
-        setSearchTerm(value)
-        setError('')
-        setShowNewProductForm(false)
+        setSearchTerm(value);
+        setError('');
+    };
 
-        const exact = findExactBarcodeMatch(value)
-        if (exact) {
-            // باركود مطابق تمامًا = سكانر (أو كتابة باركود كامل يدويًا) => إضافة تلقائية فورًا
-            addItemToInvoice(exact, 1, exact.purchase_price ?? exact.price ?? 0, itemExpireDate)
-            resetSearchState()
-            return
-        }
-
-        setSelectedProduct(null)
-        setItemPrice('')
-    }
-
-    // دعم السكانرات اللي بترسل Enter بعد الباركود، وكذلك الإضافة بالكيبورد فقط
+    // معالجة حدث الضغط على الأزرار (السكانر)
     const handleSearchKeyDown = (e) => {
-        if (e.key !== 'Enter') return
-        e.preventDefault()
+        if (e.key !== 'Enter') return;
 
-        if (selectedProduct) {
-            handleAddItem()
-            return
-        }
+        e.preventDefault();
+        const barcode = searchTerm.trim();
+        if (!barcode) return;
 
-        const exact = findExactBarcodeMatch(searchTerm)
-        if (exact) {
-            addItemToInvoice(exact, 1, exact.purchase_price ?? exact.price ?? 0, itemExpireDate)
-            resetSearchState()
-            return
-        }
+        // البحث عن تطابق تام للباركود
+        const product = products.find(
+            p => p.barcode && String(p.barcode).trim() === barcode
+        );
 
-        if (searchResults.length === 1) {
-            handleSelectProduct(searchResults[0])
+        if (product) {
+            // إضافة الصنف تلقائياً للفاتورة بكمية 1 وسعره الافتراضي
+            addItemToInvoice(product, 1, product.price ?? 0, new Date().toISOString().slice(0, 10));
+            resetSearchState();
+        } else {
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'الباركود غير موجود في قاعدة البيانات',
+                showConfirmButton: false,
+                timer: 3000,
+            });
         }
-    }
+    };
 
     const handleSelectProduct = (product) => {
         setSelectedProduct(product)
         setSearchTerm(product.name)
-        setItemPrice(0)
+        setItemPrice(product.price ?? 0)
         setQuantity(1)
         setShowNewProductForm(false)
         requestAnimationFrame(() => {
@@ -288,13 +310,19 @@ function EditInvoice() {
 
     const handleSaveNewProduct = async () => {
         if (!newProduct.name.trim()) {
-            setError('اسم المنتج مطلوب')
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'اسم المنتج مطلوب',
+                showConfirmButton: false,
+                timer: 3000,
+            });
             return
         }
         setSavingProduct(true)
         setError('')
         try {
-            // عدّل المسار "/products" إذا كان مختلفًا في الباك إند لديك
             const res = await apiFetch(`products`, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -309,22 +337,43 @@ function EditInvoice() {
             const json = await res.json()
             if (json.status) {
                 const created = json.data
-                setProducts((prev) => [...prev, created])
+                setProducts((prev) => [created, ...prev])
                 setSelectedProduct(created)
                 setSearchTerm(created.name)
                 setItemPrice(created.purchase_price ?? newProduct.purchase_price ?? '')
                 setQuantity(1)
                 setShowNewProductForm(false)
-                setSuccessMsg('تم إضافة المنتج الجديد بنجاح، أكمل إضافته للفاتورة')
+                Swal.fire({
+                    toast: true,
+                    position: "center",
+                    icon: "success",
+                    title: 'تم إضافة المنتج الجديد بنجاح، أكمل إضافته للفاتورة',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
                 requestAnimationFrame(() => {
                     quantityInputRef.current?.focus()
                     quantityInputRef.current?.select()
                 })
             } else {
-                setError(json.message || 'فشل إضافة المنتج')
+                Swal.fire({
+                    toast: true,
+                    position: "center",
+                    icon: "error",
+                    title: json.message || 'فشل إضافة المنتج',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
             }
         } catch (err) {
-            setError('حدث خطأ أثناء إضافة المنتج')
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'حدث خطأ أثناء إضافة المنتج',
+                showConfirmButton: false,
+                timer: 3000,
+            });
         } finally {
             setSavingProduct(false)
         }
@@ -332,7 +381,14 @@ function EditInvoice() {
 
     const handleAddItem = () => {
         if (!selectedProduct) {
-            setError('اختر منتجًا أولاً')
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'اختر منتجًا أولاً',
+                showConfirmButton: false,
+                timer: 3000,
+            });
             return
         }
         addItemToInvoice(selectedProduct, quantity, itemPrice, itemExpireDate)
@@ -344,7 +400,6 @@ function EditInvoice() {
         addSound.play()
     }
 
-    // تعديل الكمية أو السعر مباشرة من الجدول
     const handleUpdateItem = (productId, field, value) => {
         setItems((prev) =>
             prev.map((item) => {
@@ -357,7 +412,6 @@ function EditInvoice() {
         )
     }
 
-    // تعديل تاريخ الصلاحية مباشرة من الجدول (منفصل لأنه نص مش رقم)
     const handleUpdateItemDate = (productId, value) => {
         setItems((prev) =>
             prev.map((item) => (item.product_id === productId ? { ...item, expire_date: value } : item))
@@ -366,18 +420,31 @@ function EditInvoice() {
 
     const totalAmount = items.reduce((sum, i) => sum + i.subtotal, 0)
 
-    // إرسال التعديلات للسيرفر (تحديث الفاتورة الحالية بدل إنشاء فاتورة جديدة)
     const handleSubmitPurchase = async () => {
         setError('');
         setSuccessMsg('');
 
         if (!supplierId) {
-            setError('اختر المورد');
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'اختر المورد',
+                showConfirmButton: false,
+                timer: 3000,
+            });
             return;
         }
 
         if (items.length === 0) {
-            setError('أضف صنفًا واحدًا على الأقل للفاتورة');
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'أضف صنفًا واحدًا على الأقل للفاتورة',
+                showConfirmButton: false,
+                timer: 3000,
+            });
             return;
         }
 
@@ -385,18 +452,15 @@ function EditInvoice() {
 
         try {
             const formData = new FormData();
-
             formData.append('supplier_id', supplierId);
             formData.append('date', purchaseDate);
             formData.append('notes', invoiceNumber || '');
-            // PHP لا يقرأ ملفات multipart مع PUT الحقيقي، فبنبعت POST
-            // مع _method=PUT (method spoofing) عشان لارافيل يوجهها للراوت الصحيح
             formData.append('_method', 'PUT');
 
             if (image) {
                 formData.append('image', image);
             }
- 
+
             items.forEach((item, index) => {
                 formData.append(`items[${index}][product_id]`, item.product_id);
                 formData.append(`items[${index}][quantity]`, item.quantity);
@@ -404,7 +468,6 @@ function EditInvoice() {
                 formData.append(`items[${index}][expire_date]`, item.expire_date);
             });
 
-            // عدّل هذا المسار لو الراوت الخاص بتحديث الفاتورة مختلف عندك
             const res = await apiFetch(`purchases/${id}`, {
                 method: 'POST',
                 body: formData,
@@ -413,14 +476,35 @@ function EditInvoice() {
             const json = await res.json();
 
             if (json.status) {
-                setSuccessMsg('تم تحديث الفاتورة بنجاح');
+                Swal.fire({
+                    toast: true,
+                    position: "center",
+                    icon: "success",
+                    title: 'تم تحديث الفاتورة بنجاح',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
                 setTimeout(() => navigate('/invoices'), 800);
             } else {
-                setError(json.message || 'فشل حفظ التعديلات');
+                Swal.fire({
+                    toast: true,
+                    position: "center",
+                    icon: "error",
+                    title: json.message || 'فشل حفظ التعديلات',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
             }
         } catch (err) {
             console.error(err);
-            setError('حدث خطأ أثناء حفظ التعديلات');
+            Swal.fire({
+                toast: true,
+                position: "center",
+                icon: "error",
+                title: 'حدث خطأ أثناء حفظ التعديلات',
+                showConfirmButton: false,
+                timer: 3000,
+            });
         } finally {
             setSubmitting(false);
         }
@@ -463,15 +547,6 @@ function EditInvoice() {
                         <label>تاريخ الفاتورة</label>
                         <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
                     </div>
-                    {/* <div className="field">
-                        <label>ملاحظات (اختياري)</label>
-                        <input
-                            type="text"
-                            value={invoiceNumber}
-                            onChange={(e) => setInvoiceNumber(e.target.value)}
-                            placeholder="رقم فاتورة المورد أو أي ملاحظة"
-                        />
-                    </div> */}
                     <div className="field">
                         <label>صورة الفاتورة</label>
                         {existingImage && !image && (
@@ -503,9 +578,9 @@ function EditInvoice() {
                             autoComplete="off"
                         />
 
-                        {searchResults.length > 0 && (
+                        {filteredProducts.length > 0 && (
                             <div className="dropdown">
-                                {searchResults.map((p) => (
+                                {filteredProducts.map((p) => (
                                     <div key={p.id} className="dropdown-item" onClick={() => handleSelectProduct(p)}>
                                         <span className="dropdown-item-name">{p.name}</span>
                                         {p.barcode && <span className="dropdown-item-barcode">{p.barcode}</span>}

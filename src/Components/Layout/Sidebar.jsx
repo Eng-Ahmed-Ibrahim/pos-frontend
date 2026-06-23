@@ -16,14 +16,17 @@ import { TbReportAnalytics } from "react-icons/tb";
 import { PiKeyReturnLight } from "react-icons/pi";
 import { useAuth } from "../../context/AuthContext";
 
-import logo from '/logo.PNG'
 import { CiLogout } from "react-icons/ci";
 
+
+const VITE_SERVER_BASE = import.meta.env.VITE_SERVER_BASE
+const system_logo = `${VITE_SERVER_BASE}/uploads/settings/system_logo.png`
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function Sidebar() {
     const [count, setCount] = useState(0)
-    const { can } = useAuth();
+    const { can ,systemSetting} = useAuth();
+    
     const logout = () => {
         localStorage.clear()
         window.location.href = "/login";
@@ -35,8 +38,8 @@ function Sidebar() {
         <>
             <aside className="sidebar">
                 <div className="logo">
-                    <div className="logo-mark d-flex align-items-center justify-center"><span> <img className='dar-logo' src={logo} alt="" /></span></div>
-                    <div className="logo-sub text-center"> هايبر دار ضباط المشاة </div>
+                    <div className="logo-mark d-flex align-items-center justify-center"><span> <img className='dar-logo' src={system_logo} alt="" /></span></div>
+                    <div className="logo-sub text-center"> {systemSetting('system_name')}</div>
                 </div>
 
                 {can('dashboard.view') && (
@@ -166,6 +169,17 @@ function Sidebar() {
                             <NavLink to="/roles" className="nav-item">
                                 <span className="icon"><MdSecurity /></span>
                                 الأدوار والصلاحيات
+                            </NavLink>
+                        )}
+                    </div>
+                )}
+                {can('settings.view') && (
+                    <div className="nav-section">
+                        <div className="nav-label">الاعدادات</div>
+                        {can('settings.view') && (
+                            <NavLink to="/settings" className="nav-item">
+                                <span className="icon"><MdPeople /></span>
+                                الاعدادات
                             </NavLink>
                         )}
                     </div>

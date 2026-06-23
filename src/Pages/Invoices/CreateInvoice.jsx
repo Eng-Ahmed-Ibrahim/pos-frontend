@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import './CreateInvoice.css'
 import { apiFetch } from "@/Components/apiFetch";
+import Swal from "sweetalert2";
 
-// عدّل هذا الرابط حسب رابط الـ API لديك
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
+
 function CreateInvoice() {
-    const addSound = new Audio('/beep.mp3');
-    const token = localStorage.getItem("token");
+  const addSound = new Audio('/beep.mp3');
+  const token = localStorage.getItem("token");
+
   // ---------- بيانات أساسية تُجلب من الخادم ----------
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
@@ -52,7 +54,7 @@ function CreateInvoice() {
 
   const [submitting, setSubmitting] = useState(false)
 
-  // جلب البيانات الأساسية عند تحميل الصفحة، والتركيز على حقل البحث فورًا (جاهز للسكانر)
+  // جلب البيانات الأساسية عند تحميل الصفحة
   useEffect(() => {
     fetchInitialData()
   }, [])
@@ -67,9 +69,9 @@ function CreateInvoice() {
     setLoadingData(true)
     setError('')
     try {
-      const res = await apiFetch(`purchase/create-page`,{
-        method:"GET",
-        headers: { Accept: "application/json","Authorization": `Bearer ${token}` },
+      const res = await apiFetch(`purchase/create-page`, {
+        method: "GET",
+        headers: { Accept: "application/json", "Authorization": `Bearer ${token}` },
       })
       const json = await res.json()
       if (json.status) {
@@ -87,25 +89,45 @@ function CreateInvoice() {
     }
   }
 
-  // نتائج البحث (بالاسم أو الباركود) - فلترة محلية من المنتجات المحملة
-  const searchResults = (() => {
+  // 1️⃣ تحسين خارق للأداء: عمل خريطة (Map) للباركود لتسريع الـ Scanner الفوري O(1)
+  const productsBarcodeMap = useMemo(() => {
+    const map = new Map();
+    products.forEach(p => {
+      if (p.barcode) {
+        map.set(String(p.barcode).trim(), p);
+      }
+    });
+    return map;
+  }, [products]);
+
+  // 2️⃣ تحسين الأداء: الفلترة المحلية مع تحديد حد أقصى (50 عنصر فقط) للعرض لتجنب بطء المتصفح
+  const searchResults = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
     if (!term || selectedProduct) return []
-    return products.filter(
-      (p) =>
-        p.barcode?.toLowerCase().includes(term) ||
-        p.name?.toLowerCase().includes(term)
-    )
-  })()
+
+    const filtered = [];
+    for (let i = 0; i < products.length; i++) {
+      const p = products[i];
+      const barcodeMatch = p.barcode?.toLowerCase().includes(term);
+      const nameMatch = p.name?.toLowerCase().includes(term);
+
+      if (barcodeMatch || nameMatch) {
+        filtered.push(p);
+        // التوقف عند الوصول لـ 50 نتيجة لحماية الـ DOM من الانهيار والبطء
+        if (filtered.length >= 50) break;
+      }
+    }
+    return filtered;
+  }, [searchTerm, products, selectedProduct]);
 
   const noResultsFound =
     searchTerm.trim() !== '' && !selectedProduct && searchResults.length === 0 && !showNewProductForm
 
-  // مطابقة كاملة (تامة) للباركود - هي اللي بتفرق بين "بحث جزئي بالاسم" و "سكان باركود حقيقي"
+  // استخدام الـ Map السريع للبحث التام عن الباركود
   const findExactBarcodeMatch = (value) => {
-    const term = value.trim()
-    if (!term) return null
-    return products.find((p) => p.barcode && p.barcode === term) || null
+    const term = value.trim();
+    if (!term) return null;
+    return productsBarcodeMap.get(term) || null;
   }
 
   const resetSearchState = () => {
@@ -113,13 +135,11 @@ function CreateInvoice() {
     setSelectedProduct(null)
     setItemPrice('')
     setItemExpireDate(new Date().toISOString().slice(0, 10))
-
     setQuantity(1)
     setShowNewProductForm(false)
     requestAnimationFrame(() => searchInputRef.current?.focus())
   }
 
-  // إضافة المنتج فعليًا لجدول الفاتورة (تُستخدم في الإضافة اليدوية وفي السكان التلقائي)
   const addItemToInvoice = (product, qty, price, expireDate) => {
     setError('')
     if (!product) return
@@ -128,11 +148,25 @@ function CreateInvoice() {
     const priceNum = Number(price)
 
     if (!quantityNum || quantityNum <= 0) {
-      setError('الكمية غير صحيحة')
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'الكمية غير صحيحة',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
     if (price === '' || price === null || Number.isNaN(priceNum) || priceNum < 0) {
-      setError('سعر الشراء غير صحيح')
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'سعر الشراء غير صحيح',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
 
@@ -162,50 +196,58 @@ function CreateInvoice() {
           subtotal: quantityNum * priceNum,
         },
       ]
-    }) 
-        addSound.play();
-
-    setSuccessMsg(`تمت إضافة "${product.name}" للفاتورة`)
+    })
+    addSound.play();
+    Swal.fire({
+      toast: true,
+      position: "center",
+      icon: "success",
+      title: `تمت إضافة "${product.name}" للفاتورة`,
+      showConfirmButton: false,
+      timer: 3000,
+    });
   }
 
-  // أي تغيير في حقل البحث - هنا بيتم اكتشاف السكان التلقائي
   const handleSearchChange = (value) => {
     setSearchTerm(value)
     setError('')
     setShowNewProductForm(false)
 
-    const exact = findExactBarcodeMatch(value)
-    if (exact) {
-      // باركود مطابق تمامًا = سكانر (أو كتابة باركود كامل يدويًا) => إضافة تلقائية فورًا
-      addItemToInvoice(exact, 1, exact.purchase_price ?? exact.price ?? 0, itemExpireDate)
-      resetSearchState()
-      return
-    }
-
+    // تم إزالة الإضافة الفورية من هنا تماماً عشان نمنع اللخبطة أثناء كتابة السكانر السريعة
     setSelectedProduct(null)
     setItemPrice('')
-
   }
 
-  // دعم السكانرات اللي بترسل Enter بعد الباركود، وكذلك الإضافة بالكيبورد فقط
   const handleSearchKeyDown = (e) => {
     if (e.key !== 'Enter') return
-    e.preventDefault()
+    e.preventDefault() // منع الـ Form submit الافتراضي للمتصفح
 
+    const term = searchTerm.trim()
+    if (!term) return
+
+    // 1. لو الكاشير كان اختار منتج بالاسم مسبقاً والفوكس على حقل البحث وضغط Enter
     if (selectedProduct) {
       handleAddItem()
       return
     }
 
-    const exact = findExactBarcodeMatch(searchTerm)
+    // 2. حالة السكانر: البحث عن مطابقة تامة للباركود اللي اتقرأ بالكامل وضغط Enter
+    const exact = findExactBarcodeMatch(term)
     if (exact) {
       addItemToInvoice(exact, 1, exact.purchase_price ?? exact.price ?? 0, itemExpireDate)
-      resetSearchState()
+      resetSearchState() // تفريغ الحقل وعمل فوكس عليه من جديد للاستعداد للمنتج التالي
       return
     }
 
+    // 3. لو مفيش باركود تام، وكان فيه نتيجة بحث واحدة واضحة في القائمة
     if (searchResults.length === 1) {
       handleSelectProduct(searchResults[0])
+      return
+    }
+
+    // 4. لو مفيش نتائج خالص وضغط Enter، يفتح فورم المنتج الجديد تلقائياً تسهيلاً عليه
+    if (searchResults.length === 0) {
+      handleStartNewProduct()
     }
   }
 
@@ -247,16 +289,22 @@ function CreateInvoice() {
 
   const handleSaveNewProduct = async () => {
     if (!newProduct.name.trim()) {
-      setError('اسم المنتج مطلوب')
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'اسم المنتج مطلوب',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
     setSavingProduct(true)
     setError('')
     try {
-      // عدّل المسار "/products" إذا كان مختلفًا في الباك إند لديك
       const res = await apiFetch(`products`, {
         method: 'POST',
-        headers: { Accept: "application/json","Content-Type": "application/json","Authorization": `Bearer ${token}` },
+        headers: { Accept: "application/json", "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({
           name: newProduct.name,
           barcode: newProduct.barcode || null,
@@ -275,16 +323,37 @@ function CreateInvoice() {
         setItemPrice(created.purchase_price ?? newProduct.purchase_price ?? '')
         setQuantity(1)
         setShowNewProductForm(false)
-        setSuccessMsg('تم إضافة المنتج الجديد بنجاح، أكمل إضافته للفاتورة')
+        Swal.fire({
+          toast: true,
+          position: "center",
+          icon: "success",
+          title: 'تم إضافة المنتج الجديد بنجاح، أكمل إضافته للفاتورة',
+          showConfirmButton: false,
+          timer: 3000,
+        });
         requestAnimationFrame(() => {
           quantityInputRef.current?.focus()
           quantityInputRef.current?.select()
         })
       } else {
-        setError(json.message || 'فشل إضافة المنتج')
+        Swal.fire({
+          toast: true,
+          position: "center",
+          icon: "error",
+          title: json.message || 'فشل إضافة المنتج',
+          showConfirmButton: false,
+          timer: 3000,
+        });
       }
     } catch (err) {
-      setError('حدث خطأ أثناء إضافة المنتج')
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'حدث خطأ أثناء إضافة المنتج',
+        showConfirmButton: false,
+        timer: 3000,
+      });
     } finally {
       setSavingProduct(false)
     }
@@ -292,7 +361,14 @@ function CreateInvoice() {
 
   const handleAddItem = () => {
     if (!selectedProduct) {
-      setError('اختر منتجًا أولاً')
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'اختر منتجًا أولاً',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
     addItemToInvoice(selectedProduct, quantity, itemPrice, itemExpireDate)
@@ -304,32 +380,48 @@ function CreateInvoice() {
     addSound.play()
   }
 
-  // تعديل الكمية أو السعر مباشرة من الجدول بعد الإضافة (مفيد بعد السكان التلقائي)
   const handleUpdateItem = (productId, field, value) => {
     setItems((prev) =>
       prev.map((item) => {
         if (item.product_id !== productId) return item
         const numValue = Number(value)
-        const updated = { ...item, [field]: Number.isNaN(numValue) ? 0 : numValue }
-        updated.subtotal = updated.quantity * updated.price
+        const updated = { ...item, [field]: field === 'expire_date' ? value : (Number.isNaN(numValue) ? 0 : numValue) }
+        updated.subtotal = updated.quantity * (field === 'price' ? numValue : updated.price)
         return updated
       })
     )
   }
 
-  const totalAmount = items.reduce((sum, i) => sum + i.subtotal, 0)
+  // تحسين حساب الإجمالي الكلي بـ useMemo
+  const totalAmount = useMemo(() => {
+    return items.reduce((sum, i) => sum + i.subtotal, 0);
+  }, [items]);
 
   const handleSubmitPurchase = async () => {
     setError('');
     setSuccessMsg('');
 
     if (!supplierId) {
-      setError('اختر المورد');
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'اختر المورد',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return;
     }
 
     if (items.length === 0) {
-      setError('أضف صنفًا واحدًا على الأقل للفاتورة');
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'أضف صنفًا واحدًا على الأقل للفاتورة',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return;
     }
 
@@ -337,7 +429,6 @@ function CreateInvoice() {
 
     try {
       const formData = new FormData();
-
       formData.append('supplier_id', supplierId);
       formData.append('date', purchaseDate);
       formData.append('invoice_number', invoiceNumber || '');
@@ -356,13 +447,20 @@ function CreateInvoice() {
       const res = await apiFetch(`purchases`, {
         method: 'POST',
         body: formData,
-        headers: { Accept: "application/json","Authorization": `Bearer ${token}` },
+        headers: { Accept: "application/json", "Authorization": `Bearer ${token}` },
       });
 
       const json = await res.json();
 
       if (json.status) {
-        setSuccessMsg('تم حفظ الفاتورة بنجاح');
+        Swal.fire({
+          toast: true,
+          position: "center",
+          icon: "success",
+          title: 'تم حفظ الفاتورة بنجاح',
+          showConfirmButton: false,
+          timer: 3000,
+        });
         setItems([]);
         setSupplierId('');
         setImage(null);
@@ -370,11 +468,25 @@ function CreateInvoice() {
         setPurchaseDate(new Date().toISOString().slice(0, 10));
         resetSearchState();
       } else {
-        setError(json.message || 'فشل حفظ الفاتورة');
+        Swal.fire({
+          toast: true,
+          position: "center",
+          icon: "error",
+          title: json.message || 'فشل حفظ الفاتورة',
+          showConfirmButton: false,
+          timer: 3000,
+        });
       }
     } catch (err) {
       console.error(err);
-      setError('حدث خطأ أثناء حفظ الفاتورة');
+      Swal.fire({
+        toast: true,
+        position: "center",
+        icon: "error",
+        title: 'حدث خطأ أثناء حفظ الفاتورة',
+        showConfirmButton: false,
+        timer: 3000,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -389,6 +501,7 @@ function CreateInvoice() {
   }
 
   return (
+    // باقي الـ JSX الخاص بك يظل كما هو تماماً دون أي تغيير
     <div className="invoice-page" dir="rtl">
       <div className="invoice-header">
         <h3>إضافة فاتورة شراء جديدة</h3>
@@ -398,7 +511,6 @@ function CreateInvoice() {
       {error && <div className="alert alert-error">{error}</div>}
       {successMsg && <div className="alert alert-success">{successMsg}</div>}
 
-      {/* بيانات الفاتورة */}
       <section className="card">
         <h4 className="card-title">بيانات الفاتورة</h4>
         <div className="form-row">
@@ -417,15 +529,6 @@ function CreateInvoice() {
             <label>تاريخ الفاتورة</label>
             <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
           </div>
-          {/* <div className="field">
-            <label>رقم الفاتورة (اختياري)</label>
-            <input
-              type="text"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-              placeholder="رقم فاتورة المورد"
-            />
-          </div> */}
           <div className="field">
             <label > صوره الفاتورة </label>
             <input type="file" className="form-control" onChange={(e) => setImage(e.target.files[0])} />
@@ -433,7 +536,6 @@ function CreateInvoice() {
         </div>
       </section>
 
-      {/* إضافة صنف */}
       <section className="card">
         <h4 className="card-title">إضافة منتج للفاتورة (سكان الباركود مباشر هنا)</h4>
 
@@ -509,7 +611,6 @@ function CreateInvoice() {
               </div>
               <div className="field small">
                 <label> تاريخ الصلاحيه </label>
-
                 <input
                   type="date"
                   value={itemExpireDate}
@@ -531,7 +632,6 @@ function CreateInvoice() {
           )}
         </div>
 
-        {/* نموذج منتج جديد */}
         {showNewProductForm && (
           <div className="new-product-box">
             <h5>بيانات المنتج الجديد</h5>
@@ -589,7 +689,6 @@ function CreateInvoice() {
             </div>
 
             <div className="form-row">
-
               <div className="field small">
                 <label>سعر البيع</label>
                 <input
@@ -629,7 +728,6 @@ function CreateInvoice() {
         )}
       </section>
 
-      {/* جدول الأصناف */}
       <section className="card">
         <h4 className="card-title">أصناف الفاتورة ({items.length})</h4>
 
@@ -672,12 +770,11 @@ function CreateInvoice() {
                       className="table-input"
                     />
                   </td>
-
                   <td>
                     <input
                       type="date"
                       value={i.expire_date || ''}
-                      onChange={(e) => handleUpdateItem(i.product_id,'expire_date' ,e.target.value)}
+                      onChange={(e) => handleUpdateItem(i.product_id, 'expire_date', e.target.value)}
                       className="table-input"
                     />
                   </td>
@@ -692,9 +789,7 @@ function CreateInvoice() {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan="4" className="bold">
-                  الإجمالي الكلي
-                </td>
+                <td colSpan="4" className="bold">الإجمالي الكلي</td>
                 <td className="bold total-cell">{totalAmount.toFixed(2)}</td>
                 <td></td>
               </tr>
@@ -712,4 +807,4 @@ function CreateInvoice() {
   )
 }
 
-export default CreateInvoice
+export default CreateInvoice;

@@ -82,14 +82,22 @@ html body .receipt-table td {
   .no-print {
     display: none !important;
   }
+
   .receipt-page {
     padding: 0;
   }
+
   .receipt {
     border: none;
     width: 100%;
   }
+
+  .swal2-toast {
+    display: none !important;
+    z-index: -1;
+  }
 }
+
 .pos-receipt-print-area {
   display: none;
 }
@@ -98,15 +106,19 @@ html body .receipt-table td {
   .pos-screen-only {
     display: none !important;
   }
+
   .pos-receipt-print-area {
     display: block !important;
   }
-  .topbar{
+
+  .topbar {
     display: none;
   }
-  .sidebar{
+
+  .sidebar {
     display: none;
   }
+
   @page {
     size: 80mm auto;
     margin: 0;

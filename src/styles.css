@@ -1589,3 +1589,6 @@ textarea {
     color: #999;
     padding: 20px;
 }
+.swal2-toast {
+    z-index: -1 !important;
+} 

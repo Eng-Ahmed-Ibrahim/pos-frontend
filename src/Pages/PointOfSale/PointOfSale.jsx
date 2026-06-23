@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import './SaleInvoicePrint.css' // استايل الفاتورة نفسها + كلاسات التحكم فى الطباعة
 import SaleInvoicePrint from './SaleInvoicePrint';
 import { apiFetch } from "@/Components/apiFetch";
+import Swal from "sweetalert2";
 
 const API_BASE = import.meta.env.VITE_API_URL
 const token = localStorage.getItem("token");
@@ -12,7 +13,7 @@ function PointOfSale() {
   // ---------- بيانات المنتجات ----------
   const [products, setProducts] = useState([])
   const [productsByBarcode, setProductsByBarcode] = useState({})
-  
+
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -28,7 +29,7 @@ function PointOfSale() {
   // ---------- البحث عن منتج / السكانر ----------
   const [searchTerm, setSearchTerm] = useState('')
   const [displaySearchTerm, setDisplaySearchTerm] = useState('')
-  
+
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [itemPrice, setItemPrice] = useState('')
@@ -84,10 +85,28 @@ function PointOfSale() {
         setProductsByBarcode(barcodeMap);
 
       } else {
-        setError('فشل تحميل بيانات الصفحة')
+        Swal.fire({
+          toast: true,
+          // position: "top-start",
+          position: 'center',
+          icon: "error",
+          title: 'فشل تحميل بيانات الصفحة',
+          showConfirmButton: false,
+          timer: 3000,
+        });
+
       }
     } catch (err) {
-      setError('تعذر الاتصال بالخادم، تأكد من تشغيل السيرفر')
+      setError()
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: 'تعذر الاتصال بالخادم، تأكد من تشغيل السيرفر',
+        title: 'فشل تحميل بيانات الصفحة',
+        showConfirmButton: false,
+        timer: 3000,
+      });
     } finally {
       setLoadingData(false)
     }
@@ -96,7 +115,7 @@ function PointOfSale() {
   const searchResults = useMemo(() => {
     const term = displaySearchTerm.trim().toLowerCase() // الاعتماد على القيمة المعروضة للفلترة الفورية للـ Dropdown
     if (!term || selectedProduct) return []
-    
+
     const filtered = [];
     for (let i = 0; i < products.length; i++) {
       const p = products[i];
@@ -142,20 +161,45 @@ function PointOfSale() {
     const productStock = Number(product.stock) || 0; // ⚡ تأمين الـ stock هنا كعدد
 
     if (!quantityNum || quantityNum <= 0) {
-      setError('الكمية غير صحيحة')
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: "error",
+        title: 'الكمية غير صحيحة',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
     if (price === '' || price === null || Number.isNaN(priceNum) || priceNum < 0) {
-      setError('السعر غير صحيح')
+      setError()
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: "error",
+        title: 'السعر غير صحيح',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
 
     const existing = items.find((i) => i.product_id === product.id)
     const currentQtyInCart = existing?.quantity || 0
-    
+
     // ⚡ المقارنة الآمنة للمخزون لمنع رسالة الـ undefined الكاذبة
     if (currentQtyInCart + quantityNum > productStock) {
-      setError(`الكمية المطلوبة أكبر من المخزون المتاح (${productStock} فقط)`)
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: "error",
+        title: `الكمية المطلوبة أكبر من المخزون المتاح (${productStock} فقط)`,
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
 
@@ -173,7 +217,6 @@ function PointOfSale() {
         return updated
       }
       return [
-        ...prev,
         {
           product_id: product.id,
           name: product.name,
@@ -183,54 +226,54 @@ function PointOfSale() {
           price: priceNum,
           subtotal: quantityNum * priceNum,
         },
+        ...prev
       ]
     })
+    Swal.fire({
+      toast: true,
+      // position: "top-start",
+      position: 'center',
+      icon: "success",
+      title: `تمت إضافة "${product.name}"`,
+      showConfirmButton: false,
+      timer: 3000,
+    });
 
-    setSuccessMsg(`تمت إضافة "${product.name}"`)
     addSound.play();
   }
 
   const handleSearchChange = (value) => {
-    setDisplaySearchTerm(value) 
-    setError('')
-
-    // منع البحث التلقائي الفوري إلا إذا كان طول النص كبيراً (حماية السكانر)
-    // أجهزة السكانر تقرأ الباركود كاملاً دفعة واحدة (غالباً أكثر من 4 خانات)
-    if (value.trim().length >= 4) {
-      const exact = findExactBarcodeMatch(value)
-      if (exact) {
-        if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
-        addItemToCart(exact, 1, exact.price ?? 0)
-        resetSearchState()
-        return
-      }
-    }
-
-    setSelectedProduct(null)
-    setItemPrice('')
-  }
+    setDisplaySearchTerm(value);
+    setError('');
+  };
 
   const handleSearchKeyDown = (e) => {
-    if (e.key !== 'Enter') return
-    e.preventDefault()
+    if (e.key !== 'Enter') return;
 
-    if (selectedProduct) {
-      handleAddItem()
-      return
-    }
+    e.preventDefault();
 
-    // عند الضغط على Enter، يتم الفحص فوراً حتى لو كان الحرف واحداً
-    const exact = findExactBarcodeMatch(displaySearchTerm)
-    if (exact) {
-      addItemToCart(exact, 1, exact.price ?? 0)
-      resetSearchState()
-      return
-    }
+    const barcode = e.target.value.trim();
 
-    if (searchResults.length === 1) {
-      handleSelectProduct(searchResults[0])
+    const product = products.find(
+      p => String(p.barcode).trim() === barcode
+    );
+
+    if (product) {
+      addItemToCart(product, 1, product.price ?? 0);
+      resetSearchState();
+      return;
     }
-  }
+    setDisplaySearchTerm('')
+    Swal.fire({
+      toast: true,
+      // position: "top-start",
+      position: 'center',
+      icon: "error",
+      title: 'الباركود غير موجود',
+      showConfirmButton: false,
+      timer: 3000,
+    });
+  };
 
   const handleSelectProduct = (product) => {
     setSelectedProduct(product)
@@ -250,7 +293,15 @@ function PointOfSale() {
 
   const handleAddItem = () => {
     if (!selectedProduct) {
-      setError('اختر منتجًا أولاً')
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: "error",
+        title: 'اختر منتجًا أولاً',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
     addItemToCart(selectedProduct, quantity, itemPrice)
@@ -290,14 +341,22 @@ function PointOfSale() {
     setSuccessMsg('')
 
     if (items.length === 0) {
-      setError('أضف صنفًا واحدًا على الأقل لإتمام البيع')
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: "error",
+        title: 'أضف صنفًا واحدًا على الأقل لإتمام البيع',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return
     }
 
     setSubmitting(true)
     try {
       const res = await apiFetch(`sales`, {
-        headers:{"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         method: 'POST',
         body: JSON.stringify({
           customer_name: customerName || null,
@@ -313,15 +372,41 @@ function PointOfSale() {
       const json = await res.json()
 
       if (json.status) {
-        setSuccessMsg('تم إتمام عملية البيع بنجاح')
+        Swal.fire({
+          toast: true,
+          // position: "top-start",
+          position: 'center',
+          icon: "success",
+          title: 'تم إتمام عملية البيع بنجاح',
+          showConfirmButton: false,
+          timer: 3000,
+        });
+
         setCompletedSale(json.data)
         setInvoiceId(json.data.id)
       } else {
-        setError(json.message || 'فشلت عملية البيع')
+        Swal.fire({
+          toast: true,
+          // position: "top-start",
+          position: 'center',
+          icon: "error",
+          title: json.message || 'فشلت عملية البيع',
+          showConfirmButton: false,
+          timer: 3000,
+        });
+
       }
     } catch (err) {
       console.error(err)
-      setError('حدث خطأ أثناء إتمام عملية البيع')
+      Swal.fire({
+        toast: true,
+        // position: "top-start",
+        position: 'center',
+        icon: "error",
+        title: 'حدث خطأ أثناء إتمام عملية البيع',
+        showConfirmButton: false,
+        timer: 3000,
+      });
     } finally {
       setSubmitting(false)
       resetSaleForm()
@@ -356,7 +441,7 @@ function PointOfSale() {
               <input
                 ref={searchInputRef}
                 type="text"
-                value={displaySearchTerm} 
+                value={displaySearchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="اسكان الباركود أو اكتب اسم المنتج..."
@@ -531,7 +616,7 @@ function PointOfSale() {
       </div>
 
       <div className="pos-receipt-print-area" dir="rtl">
-        <SaleInvoicePrint invoiceId={invoiceId}  />
+        <SaleInvoicePrint invoiceId={invoiceId} />
       </div>
     </>
   )
