@@ -740,7 +740,7 @@ function CreateInvoice() {
                 <th>المنتج</th>
                 <th>الباركود</th>
                 <th>الكمية</th>
-                <th>السعر</th>
+                <th>سعر الشراء</th>
                 <th>تاريخ الصلاحيه</th>
                 <th>الإجمالي</th>
                 <th></th>

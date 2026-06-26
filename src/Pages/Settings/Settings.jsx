@@ -203,7 +203,7 @@ function Settings() {
                       <div className="row">
                         {/* رقم الهاتف */}
                         <div className="col-md-6 mb-4 d-flex flex-column">
-                          <label className="custom-form-label">رقم الهاتف بالفاتورة</label>
+                          <label className="custom-form-label">رقم الهاتف </label>
                           <input
                             type="text"
                             className="form-control custom-input text-end"
@@ -212,22 +212,12 @@ function Settings() {
                           />
                         </div>
 
-                        {/* الرقم الضريبي */}
-                        <div className="col-md-6 mb-4 d-flex flex-column">
-                          <label className="custom-form-label">الرقم الضريبي (اختياري)</label>
-                          <input
-                            type="text"
-                            className="form-control custom-input"
-                            value={settings.invoice_tax_number}
-                            onChange={(e) => handleInputChange('invoice_tax_number', e.target.value)}
-                            placeholder="123-456-789"
-                          />
-                        </div>
+
                       </div>
 
                       {/* العنوان */}
                       <div className="mb-4 d-flex flex-column">
-                        <label className="custom-form-label">العنوان المطبوع على الفاتورة</label>
+                        <label className="custom-form-label">العنوان   </label>
                         <input
                           type="text"
                           className="form-control custom-input"
@@ -238,7 +228,7 @@ function Settings() {
 
                       {/* لوجو الفاتورة */}
                       <div className="mb-3 d-flex flex-column">
-                        <label className="custom-form-label">شعار الفاتورة المخصص</label>
+                        <label className="custom-form-label">لوجو الفاتورة </label>
                         <div className="logo-upload-box">
                           <div className="logo-preview">
                             {settings.invoice_logo ? (

@@ -4,6 +4,7 @@ import './SaleInvoicePrint.css'
 import { apiFetch } from "@/Components/apiFetch";
 import logo from '/black_logo.png'
 import { useAuth } from "../../context/AuthContext";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const VITE_SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const invoice_logo = `${VITE_SERVER_BASE}/uploads/settings/invoice_logo.png`
@@ -16,12 +17,16 @@ function SaleInvoicePrint({ invoiceId }) {
     const params = useParams()
     const id = invoiceId || params?.id
     console.log(id);
-    const { systemSetting} = useAuth();
+    const { systemSetting } = useAuth();
 
     const [sale, setSale] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const token = localStorage.getItem("token");
+    
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const isFromReports = searchParams.get("reports") === "1";
     useEffect(() => {
         if (id) {
             fetchSale()
@@ -51,13 +56,29 @@ function SaleInvoicePrint({ invoiceId }) {
         }
     }
 
+
+    useEffect(() => {
+
+        const handleAfterPrint = () => {
+            navigate(-1); // يرجع للصفحة السابقة
+        };
+        window.addEventListener('afterprint', handleAfterPrint);
+
+        return () => {
+            window.removeEventListener('afterprint', handleAfterPrint);
+        };
+    }, []);
+
     // طباعة تلقائية فور تحميل بيانات الفاتورة بنجاح
     useEffect(() => {
         if (sale) {
-            const timer = setTimeout(() => window.print(), 500)
-            return () => clearTimeout(timer)
+            const timer = setTimeout(() => {
+                window.print();
+            }, 500);
+
+            return () => clearTimeout(timer);
         }
-    }, [sale])
+    }, [sale]);
 
     if (loading) {
         return <p className="receipt-loading">جاري تحميل الفاتورة...</p>

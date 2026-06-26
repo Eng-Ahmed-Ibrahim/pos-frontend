@@ -74,11 +74,9 @@ function PointOfSale() {
       if (json.status) {
         const fetchedProducts = json.data.products || [];
         setProducts(fetchedProducts);
-
         const barcodeMap = {};
         fetchedProducts.forEach(p => {
           if (p.barcode) {
-            // تنظيف الباركود وتخزينه كمفتاح
             barcodeMap[p.barcode.toString().trim()] = p;
           }
         });

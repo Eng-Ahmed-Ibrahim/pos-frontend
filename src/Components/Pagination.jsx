@@ -1,12 +1,12 @@
 import React from "react";
-import { GrPrevious , GrNext  } from "react-icons/gr";
+import { GrPrevious, GrNext } from "react-icons/gr";
 
 export default function Pagination({ currentPage, lastPage, onPageChange }) {
     if (lastPage <= 1) return null;
 
     const getPages = () => {
         const pages = [];
-        const delta = 7; // 7 قبل و 7 بعد
+        const delta = 5; // 7 قبل و 7 بعد
 
         const start = Math.max(1, currentPage - delta);
         const end = Math.min(lastPage, currentPage + delta);
@@ -48,8 +48,8 @@ export default function Pagination({ currentPage, lastPage, onPageChange }) {
                 disabled={currentPage === 1}
                 onClick={() => onPageChange(currentPage - 1)}
             >
-                <GrPrevious />
 
+                <GrNext />
             </button>
 
 
@@ -67,11 +67,10 @@ export default function Pagination({ currentPage, lastPage, onPageChange }) {
                     <button
                         key={index}
                         onClick={() => onPageChange(page)}
-                        className={`btn btn-sm ${
-                            page === currentPage
+                        className={`btn btn-sm ${page === currentPage
                                 ? "btn-primary"
                                 : "btn-outline-primary"
-                        }`}
+                            }`}
                     >
                         {page}
                     </button>
@@ -85,8 +84,8 @@ export default function Pagination({ currentPage, lastPage, onPageChange }) {
                 disabled={currentPage === lastPage}
                 onClick={() => onPageChange(currentPage + 1)}
             >
-               <GrNext />
 
+                <GrPrevious />
             </button>
         </div>
     );

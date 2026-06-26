@@ -95,10 +95,10 @@ function Sidebar() {
                                 </NavLink>
                             )}
 
-                            {can('reports.view') && (
+                            {can('sales.view') && (
                                 <NavLink to="/reports" className="nav-item">
                                     <span className="icon"><TbReportAnalytics /></span>
-                                    التقارير
+                                    المبيعات
                                 </NavLink>
                             )}
                             {can('reports.view') && (
@@ -173,7 +173,7 @@ function Sidebar() {
                         )}
                     </div>
                 )}
-                {can('settings.view') && (
+                {/* {can('settings.view') && (
                     <div className="nav-section">
                         <div className="nav-label">الاعدادات</div>
                         {can('settings.view') && (
@@ -183,7 +183,7 @@ function Sidebar() {
                             </NavLink>
                         )}
                     </div>
-                )}
+                )} */}
 
                 <div className="sidebar-footer">
                     <div className="user-card" style={{ justifyContent: 'space-between' }}>

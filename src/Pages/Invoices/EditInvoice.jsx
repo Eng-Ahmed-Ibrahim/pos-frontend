@@ -56,6 +56,8 @@ function EditInvoice() {
         price: '',
         stock: '',
         minimum_stock: '',
+        remaining_stock:0,
+        total_sold:0,
     })
 
     const [submitting, setSubmitting] = useState(false)
@@ -141,6 +143,8 @@ function EditInvoice() {
                         price: price,
                         expire_date: it.expire_date ? String(it.expire_date).slice(0, 10) : '',
                         subtotal: qty * price,
+                        remaining_stock:it.remaining_stock || 0,
+                        total_sold:it.total_sold
                     }
                 })
                 setItems(mappedItems)
@@ -208,6 +212,7 @@ function EditInvoice() {
                     price: priceNum,
                     expire_date: expireDate,
                     subtotal: newQty * priceNum,
+                    
                 }
                 // نقل العنصر المُحدث لأعلى القائمة إذا كنت تفضل ذلك، أو تركه في مكانه
                 return updated
@@ -466,6 +471,7 @@ function EditInvoice() {
                 formData.append(`items[${index}][quantity]`, item.quantity);
                 formData.append(`items[${index}][price]`, item.price);
                 formData.append(`items[${index}][expire_date]`, item.expire_date);
+                formData.append(`items[${index}][remaining_stock]`, item.remaining_stock);
             });
 
             const res = await apiFetch(`purchases/${id}`, {
@@ -768,7 +774,7 @@ function EditInvoice() {
                                 <th>المنتج</th>
                                 <th>الباركود</th>
                                 <th>الكمية</th>
-                                <th>السعر</th>
+                                <th>سعر الشراء</th>
                                 <th>تاريخ الصلاحية</th>
                                 <th>الإجمالي</th>
                                 <th></th>
@@ -788,6 +794,7 @@ function EditInvoice() {
                                             className="table-input"
                                         />
                                     </td>
+                      
                                     <td>
                                         <input
                                             type="number"
