@@ -59,14 +59,14 @@ function SaleInvoicePrint({ invoiceId }) {
 
     useEffect(() => {
 
-        const handleAfterPrint = () => {
-            navigate(-1); // يرجع للصفحة السابقة
-        };
-        window.addEventListener('afterprint', handleAfterPrint);
+        // const handleAfterPrint = () => {
+        //     navigate(-1); // يرجع للصفحة السابقة
+        // };
+        // window.addEventListener('afterprint', handleAfterPrint);
 
-        return () => {
-            window.removeEventListener('afterprint', handleAfterPrint);
-        };
+        // return () => {
+        //     window.removeEventListener('afterprint', handleAfterPrint);
+        // };
     }, []);
 
     // طباعة تلقائية فور تحميل بيانات الفاتورة بنجاح
