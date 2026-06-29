@@ -773,6 +773,7 @@ function EditInvoice() {
                                 <th>المنتج</th>
                                 <th>الباركود</th>
                                 <th>الكمية</th>
+                                <th>المتبقى</th>
                                 <th>سعر الشراء</th>
                                 <th>تاريخ الصلاحية</th>
                                 <th>الإجمالي</th>
@@ -790,6 +791,15 @@ function EditInvoice() {
                                             min="1"
                                             value={i.quantity}
                                             onChange={(e) => handleUpdateItem(i.product_id, 'quantity', e.target.value)}
+                                            className="table-input"
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={i.remaining_stock}
+                                            readOnly
                                             className="table-input"
                                         />
                                     </td>

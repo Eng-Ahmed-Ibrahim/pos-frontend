@@ -113,8 +113,7 @@ function CreateInvoice() {
 
       if (barcodeMatch || nameMatch) {
         filtered.push(p);
-        // التوقف عند الوصول لـ 50 نتيجة لحماية الـ DOM من الانهيار والبطء
-        if (filtered.length >= 50) break;
+        if (filtered.length >= 20) break;
       }
     }
     return filtered;
