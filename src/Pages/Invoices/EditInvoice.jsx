@@ -170,7 +170,6 @@ function EditInvoice() {
         requestAnimationFrame(() => searchInputRef.current?.focus())
     }
 
-    // إضافة المنتج لجدول الفاتورة (مع جعل الجديد يظهر في البداية)
     const addItemToInvoice = (product, qty, price, expireDate) => {
         setError('')
         if (!product) return
