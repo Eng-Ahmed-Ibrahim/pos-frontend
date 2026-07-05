@@ -133,13 +133,7 @@ function PointOfSale() {
     return productsByBarcode[term] || null
   }
 
-  // ⚡ تعديل أمان: حماية حساب المخزون من الـ undefined والـ null
-  const getRemainingStock = (product) => {
-    if (!product) return 0;
-    const availableStock = Number(product.stock) || 0; // تحويل لأرقام لتفادي الـ undefined
-    const inCart = items.find((i) => i.product_id === product.id)?.quantity || 0
-    return availableStock - inCart
-  }
+
 
   const resetSearchState = () => {
     setSearchTerm('')
@@ -156,7 +150,6 @@ function PointOfSale() {
 
     const quantityNum = Number(qty)
     const priceNum = Number(price)
-    const productStock = Number(product.stock) || 0; // ⚡ تأمين الـ stock هنا كعدد
 
     if (!quantityNum || quantityNum <= 0) {
       Swal.fire({
@@ -187,19 +180,7 @@ function PointOfSale() {
     const existing = items.find((i) => i.product_id === product.id)
     const currentQtyInCart = existing?.quantity || 0
 
-    // ⚡ المقارنة الآمنة للمخزون لمنع رسالة الـ undefined الكاذبة
-    if (currentQtyInCart + quantityNum > productStock) {
-      Swal.fire({
-        toast: true,
-        // position: "top-start",
-        position: 'center',
-        icon: "error",
-        title: `الكمية المطلوبة أكبر من المخزون المتاح (${productStock} فقط)`,
-        showConfirmButton: false,
-        timer: 3000,
-      });
-      return
-    }
+
 
     setItems((prev) => {
       const existingIndex = prev.findIndex((i) => i.product_id === product.id)
@@ -219,7 +200,6 @@ function PointOfSale() {
           product_id: product.id,
           name: product.name,
           barcode: product.barcode,
-          stock: productStock,
           quantity: quantityNum,
           price: priceNum,
           subtotal: quantityNum * priceNum,
@@ -452,7 +432,7 @@ function PointOfSale() {
                     <div key={p.id} className="dropdown-item" onClick={() => handleSelectProduct(p)}>
                       <span className="dropdown-item-name">{p.name}</span>
                       <span className="dropdown-item-barcode">
-                        {p.barcode || '-'} • متاح: {p.stock ?? 0}
+                        {p.barcode || '-'} 
                       </span>
                     </div>
                   ))}
@@ -471,7 +451,7 @@ function PointOfSale() {
             {selectedProduct && (
               <>
                 <div className="field small">
-                  <label>الكمية (متاح {getRemainingStock(selectedProduct)})</label>
+                  <label>الكمية</label>
                   <input
                     ref={quantityInputRef}
                     type="number"

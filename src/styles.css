@@ -69,6 +69,9 @@ a {
 .dar-logo {
     width: 70px;
 }
+td,th{
+    text-align: center !important;
+}
 
 /* ─── SIDEBAR ─────────────────────────────────────── */
 .sidebar {

@@ -84,7 +84,7 @@ function Sidebar() {
                             {can('invoices.view') && (
                                 <NavLink to="/invoices" className="nav-item">
                                     <span className="icon"><MdReceipt /></span>
-                                    الفواتير
+                                    المشتريات
                                 </NavLink>
                             )}
 
@@ -95,14 +95,14 @@ function Sidebar() {
                                 </NavLink>
                             )}
 
-                            {can('sales.view') && (
+                            {/* {can('sales.view') && ( */}
                                 <NavLink to="/reports" className="nav-item">
                                     <span className="icon"><TbReportAnalytics /></span>
                                     المبيعات
                                 </NavLink>
-                            )}
+                            {/* // )} */}
                             {can('reports.view') && (
-                                <NavLink to="/reports" className="nav-item">
+                                <NavLink to="/warehouse-inventory" className="nav-item">
                                     <span className="icon"><MdOutlineInventory /></span>
                                     جرد المخزن
                                 </NavLink>
