@@ -6,10 +6,12 @@ function WarehouseInventory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
-
+  const [searchValue, setSearchValue] = useState("")
+  const [filteredData, setFilteredData] = useState([]);
   useEffect(() => {
     fetchInventory();
   }, []);
+
 
   const fetchInventory = async () => {
     try {
@@ -23,6 +25,14 @@ function WarehouseInventory() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const filteredData = data.filter(
+      item => item?.product_barcode.toString().includes(searchValue) ||
+        item?.product_name.toLowerCase().includes(searchValue?.toLowerCase())
+    )
+    setFilteredData(filteredData)
+
+  }, [data, searchValue])
 
   const toggleRow = (productId) => {
     setExpandedRow(prev => (prev === productId ? null : productId));
@@ -38,8 +48,12 @@ function WarehouseInventory() {
 
   return (
     <div dir="rtl" className="p-6">
-      <h1 className="text-xl font-bold mb-4 text-gray-800">تقرير المخزون الشهري</h1>
-
+      <h1 className="text-xl font-bold mb-4 text-gray-800"> جرد المخزون  </h1>
+      <div className='my-2'>
+        <input type="text" style={{ width: "300px" }}
+          onChange={(e) => setSearchValue(e.target.value)}
+          placeholder='البحث باستخدام اسم المنتج او الباركود' />
+      </div>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full text-sm text-right">
           <thead className="bg-gray-50 text-gray-600">
@@ -54,7 +68,7 @@ function WarehouseInventory() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.map((item) => (
+            {filteredData.map((item) => (
               <>
                 <tr key={item.product_id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{item.product_name}</td>
