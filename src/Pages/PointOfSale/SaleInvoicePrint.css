@@ -82,7 +82,9 @@ html body .receipt-table td {
   .no-print {
     display: none !important;
   }
-
+  .topbar{
+    display: none !important;
+  }
   .receipt-page {
     padding: 0;
   }

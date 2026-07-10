@@ -10,7 +10,7 @@ import {
     MdLayers,
     MdPeople,
     MdSecurity,
-    MdOutlineInventory
+    MdOutlineInventory, MdKeyboardArrowDown
 } from "react-icons/md";
 import { TbReportAnalytics } from "react-icons/tb";
 import { PiKeyReturnLight } from "react-icons/pi";
@@ -25,8 +25,9 @@ const API_BASE = import.meta.env.VITE_API_URL;
 
 function Sidebar() {
     const [count, setCount] = useState(0)
-    const { can ,systemSetting} = useAuth();
-    
+    const { can, systemSetting } = useAuth();
+    const [purchasesOpen, setPurchasesOpen] = useState(false);
+
     const logout = () => {
         localStorage.clear()
         window.location.href = "/login";
@@ -81,12 +82,36 @@ function Sidebar() {
                                 </NavLink>
                             )}
 
-                            {can('invoices.view') && (
-                                <NavLink to="/invoices" className="nav-item">
-                                    <span className="icon"><MdReceipt /></span>
-                                    المشتريات
-                                </NavLink>
+
+                            {(can('invoices.view') || can('returns.view')) && (
+                                <div className="nav-group">
+                                    <button
+                                        type="button"
+                                        className="nav-item nav-group-toggle"
+                                        onClick={() => setPurchasesOpen(prev => !prev)}
+                                    >
+                                        <span className="icon"><MdReceipt /></span>
+                                        المشتريات
+                                        <MdKeyboardArrowDown className={`arrow ${purchasesOpen ? 'open' : ''}`} />
+                                    </button>
+
+                                    <div className={`nav-subgroup ${purchasesOpen ? 'open' : ''}`}>
+                                        <div className="nav-subgroup-inner">
+                                            {can('invoices.view') && (
+                                                <NavLink to="/invoices" className="nav-item nav-sub-item">
+                                                    فواتير
+                                                </NavLink>
+                                            )}
+                                            {can('returns.view') && (
+                                                <NavLink to="/returns" className="nav-item nav-sub-item">
+                                                    مرتجعات
+                                                </NavLink>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             )}
+
 
                             {can('suppliers.view') && (
                                 <NavLink to="/suppliers" className="nav-item">
@@ -96,10 +121,10 @@ function Sidebar() {
                             )}
 
                             {/* {can('sales.view') && ( */}
-                                <NavLink to="/reports" className="nav-item">
-                                    <span className="icon"><TbReportAnalytics /></span>
-                                    المبيعات
-                                </NavLink>
+                            <NavLink to="/reports" className="nav-item">
+                                <span className="icon"><TbReportAnalytics /></span>
+                                المبيعات
+                            </NavLink>
                             {/* // )} */}
                             {can('reports.view') && (
                                 <NavLink to="/warehouse-inventory" className="nav-item">
@@ -153,6 +178,10 @@ function Sidebar() {
                                 </NavLink>
                             )}
                         </div>
+
+
+
+
                     )}
                 {(can('users.view') || can('roles.view')) && (
                     <div className="nav-section">

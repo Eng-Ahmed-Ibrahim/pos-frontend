@@ -14,9 +14,9 @@ export const AuthProvider = ({ children }) => {
     return permissions.includes(permission);
   };
 
-const systemSetting = (key) => {
-  return systemSettings?.[key] || "";
-};
+  const systemSetting = (key) => {
+    return systemSettings?.[key] || "";
+  };
   const setAuthData = (data) => {
     setUser(data.user);
     setPermissions(data.permissions || []);
@@ -25,14 +25,14 @@ const systemSetting = (key) => {
     localStorage.setItem("name", data.user.name);
     localStorage.setItem("role", data.roles);
 
-  }; 
+  };
 
   const fetchUser = async () => {
     try {
       const res = await apiFetch("user");
       const json = await res.json();
 
-      
+
       setAuthData(json);
     } catch (err) {
       setUser(null);
@@ -50,10 +50,8 @@ const systemSetting = (key) => {
     localStorage.removeItem("token");
   };
 
-
-  // 👇 أهم سطر هنا
   useEffect(() => {
-          fetchUser();
+    fetchUser();
   }, []);
 
   return (
