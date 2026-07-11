@@ -1633,10 +1633,11 @@ textarea {
 }
 
 .nav-sub-item {
-    padding-right: 2.5rem; /* إزاحة شوية عن العنصر الأب (RTL) */
+    padding-right: 1.5rem; /* إزاحة شوية عن العنصر الأب (RTL) */
     opacity: 0;
     transform: translateY(-6px);
     transition: opacity 0.25s ease, transform 0.25s ease;
+    font-size: 16px;
 }
 
 .nav-subgroup.open .nav-sub-item {

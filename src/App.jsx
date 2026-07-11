@@ -18,9 +18,10 @@ import Returned from './Pages/PointOfSale/Returned';
 import Users from './Pages/Users';
 import { AuthProvider } from './context/AuthContext';
 import Roles from './Pages/Roles';
-import Reports from './Pages/Reports';
+import Reports from './Pages/Reports/Reports';
 import Settings from './Pages/Settings/Settings';
-import WarehouseInventory from './Pages/WarehouseInventory';
+import WarehouseInventory from './Pages/Reports/WarehouseInventory';
+import CashierReports from './Pages/Reports/CashierReports';
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
             <Route path="/roles" element={<Roles />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/warehouse-inventory" element={<WarehouseInventory />} />
+            <Route path="/cashier-reports" element={<CashierReports />} />
             <Route path="/settings" element={<Settings />} />
 
             <Route path="/sales/:id/print" element={<SaleInvoicePrint />} />

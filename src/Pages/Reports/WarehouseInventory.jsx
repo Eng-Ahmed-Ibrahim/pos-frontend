@@ -45,10 +45,16 @@ function WarehouseInventory() {
   if (error) {
     return <div className="p-6 text-center text-red-600">{error}</div>;
   }
+  const monthName = new Date().toLocaleDateString("ar-EG", {
+    month: "long",
+  });
+
 
   return (
     <div dir="rtl" className="p-6">
-      <h1 className="text-xl font-bold mb-4 text-gray-800"> جرد المخزون  </h1>
+      <h2 className="text-xl font-bold mb-4 text-gray-800">
+        جرد المخزون لشهر {monthName}
+      </h2>
       <div className='my-2'>
         <input type="text" style={{ width: "300px" }}
           onChange={(e) => setSearchValue(e.target.value)}
