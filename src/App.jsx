@@ -22,6 +22,7 @@ import Reports from './Pages/Reports/Reports';
 import Settings from './Pages/Settings/Settings';
 import WarehouseInventory from './Pages/Reports/WarehouseInventory';
 import CashierReports from './Pages/Reports/CashierReports';
+import PurchaseReturned from './Pages/Invoices/Purchasereturned';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="/sub-categories" element={<SubCategory />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/invoices" element={<Invoices />} />
+            <Route path="/invoice/return" element={<PurchaseReturned  />} />
             <Route path="/invoices/create" element={<CreateInvoice />} />
             <Route path="/invoices/edit/:id" element={<EditInvoice />} />
             <Route path="/point-of-sales" element={<PointOfSale />} />

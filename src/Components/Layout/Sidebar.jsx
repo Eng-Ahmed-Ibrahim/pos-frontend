@@ -130,6 +130,10 @@ function Sidebar() {
                                                     الموردين
                                                 </NavLink>
                                             )}
+                                                <NavLink to="/invoice/return" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    مرتجعات
+                                                </NavLink>
                                         </div>
                                     </div>
                                 </div>

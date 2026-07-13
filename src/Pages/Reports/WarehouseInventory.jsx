@@ -67,8 +67,8 @@ function WarehouseInventory() {
               <th className="px-4 py-3 font-medium">المنتج</th>
               <th className="px-4 py-3 font-medium">مرحّل من الشهر السابق</th>
               <th className="px-4 py-3 font-medium">مشتريات جديدة</th>
-              <th className="px-4 py-3 font-medium">إجمالي المتاح</th>
-              <th className="px-4 py-3 font-medium">المباع</th>
+              {/* <th className="px-4 py-3 font-medium">إجمالي المتاح</th> */}
+              {/* <th className="px-4 py-3 font-medium">المباع</th> */}
               <th className="px-4 py-3 font-medium">المخزون الحالي</th>
               <th className="px-4 py-3 font-medium"></th>
             </tr>
@@ -80,8 +80,8 @@ function WarehouseInventory() {
                   <td className="px-4 py-3 font-medium text-gray-800">{item.product_name}</td>
                   <td className="px-4 py-3">{item.carried_forward}</td>
                   <td className="px-4 py-3">{item.new_purchases}</td>
-                  <td className="px-4 py-3">{item.total_available}</td>
-                  <td className="px-4 py-3 text-red-600">{item.sold}</td>
+                  {/* <td className="px-4 py-3">{item.total_available}</td> */}
+                  {/* <td className="px-4 py-3 text-red-600">{item.sold}</td> */}
                   <td className="px-4 py-3 font-semibold" style={{ color: '#8B5E3C' }}>
                     {item.current_stock}
                   </td>

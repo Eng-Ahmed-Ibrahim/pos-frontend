@@ -2,8 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { MdNotificationsNone, MdFullscreen, MdFullscreenExit, MdAdd } from "react-icons/md";
 import { AiOutlineFileAdd, AiOutlineBarcode } from "react-icons/ai";
 import { CiLogout } from "react-icons/ci"; // أيقونة تسجيل الخروج اللي بتستخدمها
+import { NavLink } from 'react-router-dom';
+import { useAuth } from "../../context/AuthContext";
+
 
 function Navbar() {
+  const { can, systemSetting } = useAuth();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false); // الحالة الخاصة بقائمة المستخدم
@@ -55,31 +59,90 @@ function Navbar() {
 
   return (
     <>
-      <div className="topbar d-flex align-items-center justify-content-between" 
-           style={{ 
-             padding: '12px 24px', 
-             background: '#ffffff', 
-             borderBottom: '1px solid #eef2f5',
-             boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-             position: 'relative'
-           }}>
-        
+      <div className="topbar d-flex align-items-center justify-content-between"
+        style={{
+          padding: '12px 24px',
+          background: '#ffffff',
+          borderBottom: '1px solid #eef2f5',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+          position: 'relative'
+        }}>
+
         {/* الجزء الأيمن */}
         <div className="topbar-right d-flex align-items-center" style={{ gap: '15px' }}>
-          <div>
-            <div className="page-title" style={{ fontSize: '18px', fontWeight: '700', color: '#2c3e50' }}>
-              مرحباً بك، {name.split(' ')[0]} 👋
+          <div className="user-profile-container" ref={userMenuRef} style={{ position: 'relative' }}>
+            <div className="user-profile-nav"
+              onClick={() => setShowUserMenu(!showUserMenu)} // يفتح ويقفل عند الضغط
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+              <div className="avatar" style={{
+                width: '36px',
+                height: '36px',
+                background: '#f4f6f8',
+                color: '#8B5E3C',
+                border: '1px solid #e1e8ed',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '13px'
+              }}>
+                {name.charAt(0).toUpperCase()}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#2c3e50', lineHeight: '1.2' }}>{name}</span>
+                <span style={{ fontSize: '11px', color: '#bdc3c7' }}>{role}</span>
+              </div>
             </div>
+
+            {showUserMenu && (
+              <div className="user-dropdown-menu" style={{
+                position: 'absolute',
+                top: '48px',
+                // left: '-70%',
+                background: '#ffffff',
+                border: '1px solid #eef2f5',
+                borderRadius: '8px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+                minWidth: '160px',
+                zIndex: '1000',
+                overflow: 'hidden'
+              }}>
+                <button
+                  onClick={logout}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 16px',
+                    color: '#e74c3c',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    textAlign: 'right',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#fdf2f2'}
+                  onMouseLeave={(e) => e.target.style.background = 'none'}
+                >
+                  <CiLogout style={{ fontSize: '18px', color: '#e74c3c' }} />
+                  تسجيل الخروج
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
 
         {/* الجزء الأيسر */}
         <div className="topbar-actions d-flex align-items-center" style={{ gap: '18px' }}>
-          
+
           {/* زر الإضافة السريعة */}
           <div style={{ position: 'relative' }}>
-            <button 
+            <button
               onClick={() => setShowQuickMenu(!showQuickMenu)}
               className="btn"
               style={{
@@ -112,20 +175,36 @@ function Navbar() {
                 zIndex: '999',
                 overflow: 'hidden'
               }}>
-                <a href="/invoices/create" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', color: '#333', textDecoration: 'none', fontSize: '13px' }}>
+                <NavLink to="/invoices/create" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', color: '#333', textDecoration: 'none', fontSize: '13px' }}>
                   <AiOutlineFileAdd style={{ color: '#8B5E3C' }} /> فاتورة جديدة
-                </a>
-                <a href="/products" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', color: '#333', textDecoration: 'none', fontSize: '13px', borderTop: '1px solid #f5f5f5' }}>
+                </NavLink>
+                <NavLink to="/products" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', color: '#333', textDecoration: 'none', fontSize: '13px', borderTop: '1px solid #f5f5f5' }}>
                   <AiOutlineBarcode style={{ color: '#8B5E3C' }} /> إضافة منتج
-                </a>
+                </NavLink>
               </div>
             )}
           </div>
 
-          <div style={{ width: '1px', height: '24px', background: '#e0e0e0' }}></div>
+          {can('point_of_sale.view') && (
+            <NavLink to="/point-of-sales" className="nav-item " style={{
+              background: '#8B5E3C',
+              color: '#fff',
+              border: 'none',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontWeight: '600'
+            }}>
+              نقطة البيع
+            </NavLink>
+          )}
 
           {/* زر ملء الشاشة */}
-          <button 
+          <button
             onClick={toggleFullscreen}
             style={{ background: 'none', border: 'none', fontSize: '26px', cursor: 'pointer', color: '#5a6c7d', display: 'flex', alignItems: 'center' }}
             title={isFullscreen ? "الخروج من ملء الشاشة" : "عرض بملء الشاشة"}
@@ -149,73 +228,7 @@ function Navbar() {
 
           <div style={{ width: '1px', height: '24px', background: '#e0e0e0' }}></div>
 
-          {/* كارت المستخدم مع الـ Dropdown (مُغلف بالـ Ref) */}
-          <div className="user-profile-container" ref={userMenuRef} style={{ position: 'relative' }}>
-            <div className="user-profile-nav" 
-                 onClick={() => setShowUserMenu(!showUserMenu)} // يفتح ويقفل عند الضغط
-                 style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
-              <div className="avatar" style={{
-                width: '36px',
-                height: '36px',
-                background: '#f4f6f8',
-                color: '#8B5E3C',
-                border: '1px solid #e1e8ed',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '700',
-                fontSize: '13px'
-              }}>
-                {name.charAt(0).toUpperCase()}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: '#2c3e50', lineHeight: '1.2' }}>{name}</span>
-                <span style={{ fontSize: '11px', color: '#bdc3c7' }}>{role}</span>
-              </div>
-            </div>
 
-            {/* الـ Dropdown Menu الخاصة بالمستخدم */}
-            {showUserMenu && (
-              <div className="user-dropdown-menu" style={{
-                position: 'absolute',
-                top: '48px',
-                left: '-70%', // يفتح باتجاه اليمين بما أنه في أقصى اليسار
-                background: '#ffffff',
-                border: '1px solid #eef2f5',
-                borderRadius: '8px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                minWidth: '160px',
-                zIndex: '1000',
-                overflow: 'hidden'
-              }}>
-                {/* يمكنك إضافة روابط إضافية هنا مستقبلاً مثل "الملف الشخصي" أو "الإعدادات" */}
-                <button 
-                  onClick={logout}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '12px 16px',
-                    color: '#e74c3c', // لون أحمر يعبر عن الخروج
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    textAlign: 'right',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = '#fdf2f2'}
-                  onMouseLeave={(e) => e.target.style.background = 'none'}
-                >
-                  <CiLogout style={{ fontSize: '18px', color: '#e74c3c' }} />
-                  تسجيل الخروج
-                </button>
-              </div>
-            )}
-          </div>
 
         </div>
       </div>
