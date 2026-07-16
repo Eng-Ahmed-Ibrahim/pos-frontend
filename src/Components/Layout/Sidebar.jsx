@@ -194,6 +194,17 @@ function Sidebar() {
                                     المنتجات
                                 </NavLink>
                             )}
+                            {/* {can('products.view') && ( */}
+                                <NavLink
+                                    to="/units"
+                                    className={({ isActive }) =>
+                                        isActive ? "nav-item active" : "nav-item"
+                                    }
+                                >
+                                    <span className="icon"><MdInventory /></span>
+                                    الوحدات
+                                </NavLink>
+                            {/* )} */}
 
                             {can('categories.view') && (
                                 <NavLink

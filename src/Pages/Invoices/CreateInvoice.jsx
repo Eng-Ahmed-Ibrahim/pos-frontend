@@ -50,6 +50,7 @@ function CreateInvoice() {
     price: '',
     stock: '',
     minimum_stock: '',
+    unit_id:'',
   })
 
   const [submitting, setSubmitting] = useState(false)
@@ -142,7 +143,10 @@ function CreateInvoice() {
   const addItemToInvoice = (product, qty, price, expireDate) => {
     setError('')
     if (!product) return
-
+    console.log("unit name " ,product.unit.name);
+    
+    console.log('product =' , product.unit.name);
+    
     const quantityNum = Number(qty)
     const priceNum = Number(price)
 
@@ -189,6 +193,7 @@ function CreateInvoice() {
           product_id: product.id,
           name: product.name,
           barcode: product.barcode,
+          unit_name:product.unit.name,
           quantity: quantityNum,
           price: priceNum,
           expire_date: expireDate,
@@ -738,6 +743,7 @@ function CreateInvoice() {
               <tr>
                 <th>المنتج</th>
                 <th>الباركود</th>
+                <th>الوحده</th>
                 <th>الكمية</th>
                 <th>سعر الشراء</th>
                 <th>تاريخ الصلاحيه</th>
@@ -750,6 +756,7 @@ function CreateInvoice() {
                 <tr key={i.product_id}>
                   <td>{i.name}</td>
                   <td className="muted">{i.barcode || '-'}</td>
+                  <td className="muted">{i.unit_name || '-'}</td>
                   <td>
                     <input
                       type="number"

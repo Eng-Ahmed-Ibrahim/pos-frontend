@@ -12,6 +12,7 @@ import Barcode from "react-barcode";
 function Products() {
 
     const [products, setProducts] = useState([]);
+    const [units, setUnits] = useState([]);
     const [categories, setCategories] = useState([]);
     const [subCategories, setSubCategories] = useState([]);
     const [categoryId, setCategoryId] = useState('');
@@ -19,6 +20,7 @@ function Products() {
     const [name, setName] = useState('');
     const [minimumStock, setMinimumStock] = useState(0);
     const [price, setPrice] = useState(0);
+    const [unitId, setUnitId] = useState(0);
     const [subCategoryId, setSubCategoryId] = useState('');
     const [submitLoading, setSubmitLoading] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -31,6 +33,7 @@ function Products() {
     const [editMinimumStock, setEditMinimumStock] = useState('');
     const [editPrice, setEditPrice] = useState('');
     const [editName, setEditName] = useState('');
+    const [editUnitId, setEditUnitId] = useState('');
     const [editProductId, setEditProductId] = useState('');
     const [editSubCategoryId, setEditSubCategoryId] = useState('');
     const { can } = useAuth();
@@ -46,6 +49,7 @@ function Products() {
             const data = await response.json();
 
             setProducts(data.data.products);
+            setUnits(data.data.units);
             setCategories(data.data.categories || []);
             setSubCategories(data.data.sub_categories || []);
 
@@ -59,14 +63,15 @@ function Products() {
         }
     };
 
-    const openEditModal = (pro) => {
-        setEditCategoryId(pro.category_id)
-        setEditBarcodeNumber(pro.barcode)
-        setEditName(pro.name)
-        setEditProductId(pro.id)
-        setEditSubCategoryId(pro.sub_category_id)
-        setEditMinimumStock(pro.minimum_stock)
-        setEditPrice(pro.price)
+    const openEditModal = (prod) => {
+        setEditCategoryId(prod.category_id)
+        setEditBarcodeNumber(prod.barcode)
+        setEditName(prod.name)
+        setEditProductId(prod.id)
+        setEditSubCategoryId(prod.sub_category_id)
+        setEditMinimumStock(prod.minimum_stock)
+        setEditPrice(prod.price)
+        setEditUnitId(prod.unit_id)
     }
     useEffect(() => {
         fetchProducts(1);
@@ -96,6 +101,7 @@ function Products() {
             formData.append('sub_category_id', subCategoryId)
             formData.append('name', name)
             formData.append('price', price)
+            formData.append('unit_id', unitId)
             formData.append('minimum_stock', minimumStock)
             formData.append('barcode', barcodeNumber)
             const response = await apiFetch(`products`, {
@@ -141,6 +147,7 @@ function Products() {
 
             formData.append('name', editName)
             formData.append('price', editPrice)
+            formData.append('unit_id', editUnitId)
             formData.append('minimum_stock', editMinimumStock)
             formData.append('category_id', editCategoryId)
             if (editSubCategoryId) {
@@ -241,6 +248,7 @@ function Products() {
                                 <tr>
                                     <th>#</th>
                                     <th>الاسم</th>
+                                    <th>الوحده</th>
                                     <th>باركود</th>
                                     <th>سعر البيع</th>
                                     <th>الحد الامان</th>
@@ -254,31 +262,32 @@ function Products() {
 
                             <tbody>
                                 {products.length > 0 ? (
-                                    products.map((pro, index) => (
-                                        <tr key={pro.id}>
+                                    products.map((prod, index) => (
+                                        <tr key={prod.id}>
                                             <td>{index + 1}</td>
-                                            <td>{pro.name}</td>
+                                            <td>{prod.name}</td>
+                                            <td>{prod.unit.name}</td>
                                             <td>
                                                 <Barcode
-                                                    value={pro.barcode}
+                                                    value={prod.barcode}
                                                     width={1}
                                                     height={30}
                                                     displayValue={true}
                                                     fontSize={8}
                                                 />
                                             </td>
-                                            <td>{pro.price}</td>
-                                            <td>{pro.minimum_stock}</td>
-                                            <td>{pro.category?.name}</td>
-                                            <td>{pro.sub_category?.name || "لا يوجد"}</td>
+                                            <td>{prod.price}</td>
+                                            <td>{prod.minimum_stock}</td>
+                                            <td>{prod.category?.name}</td>
+                                            <td>{prod.sub_category?.name || "لا يوجد"}</td>
                                             <td>
                                                 {can('products.edit') &&
-                                                    (<button className="btn btn-ghost btn-sm btn-icon me-1" onClick={() => openEditModal(pro)} data-bs-toggle="modal" data-bs-target="#editModal" >
+                                                    (<button className="btn btn-ghost btn-sm btn-icon me-1" onClick={() => openEditModal(prod)} data-bs-toggle="modal" data-bs-target="#editModal" >
                                                         <FiEdit2 />
                                                     </button>
                                                     )}
-                                                {can('products.delete') &&
-                                                    (<button className="btn btn-danger btn-sm btn-icon mx-2" onClick={() => deleteProduct(pro.id)} >
+                                                {can('dprodducts.delete') &&
+                                                    (<button className="btn btn-danger btn-sm btn-icon mx-2" onClick={() => deleteProduct(prod.id)} >
                                                         <FiTrash2 /> </button>
                                                     )}
                                             </td>
@@ -305,7 +314,7 @@ function Products() {
             )}
             {/* ===== ADD MODAL ===== */}
             <div className="modal fade" id="Modal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex={-1}>
-                <div className="modal-dialog">
+                <div className="modal-dialog modal-lg">
                     <div className="modal-content">
                         <div className="modal-header">
                             <h1 className="modal-title fs-5">اضافه منتج </h1>
@@ -320,6 +329,15 @@ function Products() {
                                 <div className="col-6">
                                     <label className="form-label">باركود</label>
                                     <input value={barcodeNumber} onChange={(e) => setBarcodeNumber(e.target.value)} type="number" className="form-control" placeholder="باركود" />
+                                </div>
+                                <div className="col-12">
+                                    <label className="form-label">الوحده</label>
+                                    <select value={unitId} onChange={(e) => setUnitId(e.target.value)} className="form-select">
+                                        <option value="">اختار الوحده</option>
+                                        {units.map((cat) => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="col-6">
                                     <label className="form-label">سعر البيع</label>
@@ -360,7 +378,7 @@ function Products() {
             </div>
             {/* ===== Edit MODAL ===== */}
             <div className="modal fade" id="editModal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex={-1}>
-                <div className="modal-dialog">
+                <div className="modal-dialog modal-lg">
                     <div className="modal-content">
                         <div className="modal-header">
                             <h1 className="modal-title fs-5">تعديل منتج </h1>
@@ -375,6 +393,15 @@ function Products() {
                                 <div className="col-6">
                                     <label className="form-label">باركود</label>
                                     <input value={editBarcodeNumber} onChange={(e) => setEditBarcodeNumber(e.target.value)} type="number" className="form-control" placeholder="باركود" />
+                                </div>
+                                <div className="col-12">
+                                    <label className="form-label">الوحده</label>
+                                    <select value={editUnitId} onChange={(e) => setEditUnitId(e.target.value)} className="form-select">
+                                        <option value="">اختار الوحده</option>
+                                        {units.map((cat) => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="col-6">
                                     <label className="form-label">سعر البيع</label>
