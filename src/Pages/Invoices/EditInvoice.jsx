@@ -58,6 +58,7 @@ function EditInvoice() {
         minimum_stock: '',
         remaining_stock:0,
         total_sold:0,
+        unit_name:''
     })
 
     const [submitting, setSubmitting] = useState(false)
@@ -144,7 +145,8 @@ function EditInvoice() {
                         expire_date: it.expire_date ? String(it.expire_date).slice(0, 10) : '',
                         subtotal: qty * price,
                         remaining_stock:it.remaining_stock || 0,
-                        total_sold:it.total_sold
+                        total_sold:it.total_sold,
+                        unit_name:it.product?.unit?.name
                     }
                 })
                 setItems(mappedItems)
@@ -216,6 +218,8 @@ function EditInvoice() {
                 // نقل العنصر المُحدث لأعلى القائمة إذا كنت تفضل ذلك، أو تركه في مكانه
                 return updated
             }
+            console.log("prodcut " ,product);
+            
             // إضافة الصنف الجديد تماماً في أول المصفوفة هنا [عنصر جديد، ...العناصر القديمة]
             return [
                 {
@@ -226,6 +230,7 @@ function EditInvoice() {
                     price: priceNum,
                     expire_date: expireDate,
                     subtotal: quantityNum * priceNum,
+                    unit_name : product.unit_name
                 },
                 ...prev,
             ]
@@ -306,6 +311,7 @@ function EditInvoice() {
             purchase_price: '',
             stock: '',
             minimum_stock: '',
+            unitId:''
         })
     }
 
@@ -772,6 +778,7 @@ function EditInvoice() {
                             <tr>
                                 <th>المنتج</th>
                                 <th>الباركود</th>
+                                <th>الوحدة</th>
                                 <th>الكمية</th>
                                 <th>المتبقى</th>
                                 <th>سعر الشراء</th>
@@ -785,6 +792,7 @@ function EditInvoice() {
                                 <tr key={i.product_id}>
                                     <td>{i.name}</td>
                                     <td className="muted">{i.barcode || '-'}</td>
+                                    <td className="muted">{i.unit_name || '-'}</td>
                                     <td>
                                         <input
                                             type="number"

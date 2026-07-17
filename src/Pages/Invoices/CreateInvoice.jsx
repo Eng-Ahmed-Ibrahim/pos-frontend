@@ -143,9 +143,9 @@ function CreateInvoice() {
   const addItemToInvoice = (product, qty, price, expireDate) => {
     setError('')
     if (!product) return
-    console.log("unit name " ,product.unit.name);
+    console.log("unit name " ,product.unit_name);
     
-    console.log('product =' , product.unit.name);
+    console.log('product =' , product.unit_name);
     
     const quantityNum = Number(qty)
     const priceNum = Number(price)
@@ -193,11 +193,11 @@ function CreateInvoice() {
           product_id: product.id,
           name: product.name,
           barcode: product.barcode,
-          unit_name:product.unit.name,
+          unit_name:product.unit_name,
           quantity: quantityNum,
           price: priceNum,
           expire_date: expireDate,
-          subtotal: quantityNum * priceNum,
+          subtotal: quantityNum * priceNum, 
         },
       ]
     })
