@@ -243,23 +243,41 @@ function PointOfSale() {
       return;
     }
 
-    if (barcode.startsWith('00')) {
-      const weightGrams = barcode.slice(-5);           
-      const itemCode = barcode.slice(2, -5);         
+    const SCALE_PREFIX = '20'; 
+    const BARCODE_LENGTH = 13;
+
+    if (barcode.length === BARCODE_LENGTH && barcode.startsWith(SCALE_PREFIX)) {
+      const weightGrams = barcode.slice(7, 12);
+      const productBarcode = barcode.slice(0, 7); // شامل الـ prefix
       const weightKg = Number(weightGrams) / 1000;
 
       const weightedProduct = products.find(
-      p => String(p.barcode).trim() === itemCode
-    );
-      console.log(`weightKg = ${weightKg} itemCode ${itemCode} weightedProduct ${weightedProduct} `);
-      console.log(products.map(p => `[${p.barcode}] length:${String(p.barcode).length}`));
+      p => String(p.barcode).trim() === productBarcode
+    );;
 
-      if (weightedProduct && weightKg > 0) {
+      // if (weightedProduct && weightKg > 0) {
         addItemToCart(weightedProduct, weightKg, weightedProduct.price ?? 0);
         resetSearchState();
         return;
-      }
+      // }
     }
+    // if (barcode.startsWith('00')) {
+    //   const weightGrams = barcode.slice(-5);           
+    //   const itemCode = barcode.slice(2, -5);         
+    //   const weightKg = Number(weightGrams) / 1000;
+
+    //   const weightedProduct = products.find(
+    //   p => String(p.barcode).trim() === itemCode
+    // );
+    //   console.log(`weightKg = ${weightKg} itemCode ${itemCode} weightedProduct ${weightedProduct} `);
+    //   console.log(products.map(p => `[${p.barcode}] length:${String(p.barcode).length}`));
+
+    //   if (weightedProduct && weightKg > 0) {
+    //     addItemToCart(weightedProduct, weightKg, weightedProduct.price ?? 0);
+    //     resetSearchState();
+    //     return;
+    //   }
+    // }
 
     // 3) مفيش أي تطابق
     setDisplaySearchTerm('')

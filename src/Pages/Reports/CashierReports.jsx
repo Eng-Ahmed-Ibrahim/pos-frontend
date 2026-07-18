@@ -168,7 +168,7 @@ function CashierReports() {
                             <th>الكاشير</th>
                             <th>المنتجات</th>
                             <th>الملبغ</th>
-                            <th>المدفوع</th>
+                            {/* <th>المدفوع</th> */}
                             <th>التاريخ</th>
                         </tr>
                     </thead>
@@ -192,10 +192,10 @@ function CashierReports() {
 
                                 <td>{sale.total}</td>
 
-                                <td>{sale.amount_paid ?? "-"}</td>
+                                {/* <td>{sale.amount_paid ?? "-"}</td> */}
 
-                                <td>
-                                    {new Date(sale.created_at).toLocaleString()}
+                                <td className="muted">
+                                    {new Date(sale.created_at).toLocaleString('ar-EG')}
                                 </td>
                             </tr>
                         ))}

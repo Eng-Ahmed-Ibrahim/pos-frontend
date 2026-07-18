@@ -134,6 +134,10 @@ function Sidebar() {
                                                     <span className="icon"><FaLeftLong /></span>
                                                     مرتجعات
                                                 </NavLink>
+                                                <NavLink to="/waste" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    الهالك
+                                                </NavLink>
                                         </div>
                                     </div>
                                 </div>
