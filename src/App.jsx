@@ -25,6 +25,7 @@ import CashierReports from './Pages/Reports/CashierReports';
 import PurchaseReturned from './Pages/Invoices/Purchasereturned';
 import Units from './Pages/Units';
 import WastePage from './Pages/Wastepage';
+import FinancialReport from './Pages/Financialreport';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
             <Route path="/roles" element={<Roles />} />
             <Route path="/units" element={<Units />} />
             <Route path="/waste" element={<WastePage />} />
+            <Route path="/financial" element={<FinancialReport />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/warehouse-inventory" element={<WarehouseInventory />} />
             <Route path="/cashier-reports" element={<CashierReports />} />

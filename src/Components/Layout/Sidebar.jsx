@@ -172,6 +172,10 @@ function Sidebar() {
                                                 جرد المخزن
                                             </NavLink>
                                         )}
+                                        <NavLink to="/financial" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
+                                            <span className="icon"><FaLeftLong /></span>
+                                        الماليات
+                                        </NavLink>
 
                                     </div>
                                 </div>
