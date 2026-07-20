@@ -6,7 +6,7 @@ const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 import { apiFetch } from "@/Components/apiFetch";
 import { useAuth } from "@/context/AuthContext";
-import Pagination from "../Components/Pagination";
+import Pagination from "../../Components/Pagination";
 import Barcode from "react-barcode";
 
 function Products() {

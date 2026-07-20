@@ -119,18 +119,6 @@ function Reports() {
               </div>
             </>
           )}
-
-          {/* زر التصفية */}
-          <div className="col-md-1">
-            <button  className="btn w-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'green', color: '#fff' }}>
-                PDF
-            </button>
-          </div>
-          <div className="col-md-1">
-            <button  className="btn w-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'green', color: '#fff' }}>
-               اكسيل
-            </button>
-          </div>
           <div className="col-md-2">
             <button type="submit" className="btn w-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#8B5E3C', color: '#fff' }}>
               <FiFilter className="me-2" /> فلتر

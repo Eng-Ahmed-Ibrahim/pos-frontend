@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from "@/Components/apiFetch";
+import * as XLSX from 'xlsx';
 
 function WarehouseInventory() {
   const [data, setData] = useState([]);
@@ -12,7 +13,25 @@ function WarehouseInventory() {
     fetchInventory();
   }, []);
 
+  const handleExportExcel = () => {
+    const exportData = filteredData.map(item => ({
+      'المنتج': item.product_name,
+      'مرحّل من الشهر السابق': item.carried_forward,
+      'مشتريات جديدة': item.new_purchases,
+      'المخزون الحالي': item.current_stock,
+    }));
 
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    ws['!cols'] = [
+      { wch: 25 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 18 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `جرد ${monthName}`);
+
+    XLSX.writeFile(wb, `جرد مخزون-${monthName}.xlsx`);
+  };
   const fetchInventory = async () => {
     try {
       setLoading(true);
@@ -55,10 +74,20 @@ function WarehouseInventory() {
       <h2 className="text-xl font-bold mb-4 text-gray-800">
         جرد المخزون لشهر {monthName}
       </h2>
-      <div className='my-2'>
+      <div className='my-2 flex  gap-2'>
         <input type="text" style={{ width: "300px" }}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder='البحث باستخدام اسم المنتج او الباركود' />
+
+
+        <button
+          onClick={handleExportExcel}
+          className="btn "
+          style={{ backgroundColor: 'green', color: '#fff' }}
+        >
+          اكسيل
+        </button>
+
       </div>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full text-sm text-right">

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { apiFetch } from "@/Components/apiFetch";
 import Swal from "sweetalert2";
-import Pagination from '../Components/Pagination';
+import Pagination from '../../Components/Pagination';
 
 function WastePage() {
   // ---------- بيانات المنتجات ----------

@@ -2,30 +2,30 @@ import { Routes, Route } from 'react-router-dom';
 
 import Layout from './Components/Layout/Layout';
 import Dashboard from './Pages/Dashboard';
-import Products from './Pages/Products';
-import Category from './Pages/Category';
-import SubCategory from './Pages/SubCategory';
-import Suppliers from './Pages/Suppliers';
-import CreateInvoice from './Pages/Invoices/CreateInvoice';
-import Invoices from './Pages/Invoices/Invoices';
-import EditInvoice from './Pages/Invoices/EditInvoice';
+import Products from './Pages/Products/Products';
+import Category from './Pages/Products/Category';
+import SubCategory from './Pages/Products/SubCategory';
+import Suppliers from './Pages/Purchases/Suppliers';
+import CreateInvoice from './Pages/Purchases/CreateInvoice';
+import Invoices from './Pages/Purchases/Invoices';
+import EditInvoice from './Pages/Purchases/EditInvoice';
 import PointOfSale from './Pages/PointOfSale/Pointofsale';
 import SaleInvoicePrint from './Pages/PointOfSale/SaleInvoicePrint';
 import Login from './Pages/Login/Login';
 import ProtectedRoute from './Components/ProtectedRoute';
 import PublicRoute from './Components/PublicRoute';
 import Returned from './Pages/PointOfSale/Returned';
-import Users from './Pages/Users';
+import Users from './Pages/Users/Users';
 import { AuthProvider } from './context/AuthContext';
-import Roles from './Pages/Roles';
+import Roles from './Pages/Users/Roles';
 import Reports from './Pages/Reports/Reports';
 import Settings from './Pages/Settings/Settings';
 import WarehouseInventory from './Pages/Reports/WarehouseInventory';
 import CashierReports from './Pages/Reports/CashierReports';
-import PurchaseReturned from './Pages/Invoices/Purchasereturned';
-import Units from './Pages/Units';
-import WastePage from './Pages/Wastepage';
-import FinancialReport from './Pages/Financialreport';
+import PurchaseReturned from './Pages/Purchases/Purchasereturned';
+import Units from './Pages/Products/Units';
+import WastePage from './Pages/Purchases/Wastepage';
+import FinancialReport from './Pages/Reports/Financialreport';
 
 function App() {
   return (
