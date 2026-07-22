@@ -79,18 +79,7 @@ export default function FinancialReport() {
       align: "center",
       render: (v) => `${Number(v).toLocaleString()} ج.م`,
     },
-    {
-      title: "الفرق",
-      dataIndex: "value_change",
-      key: "value_change",
-      align: "center",
-      render: (v) => (
-        <span className={v >= 0 ? "text-green-600" : "text-red-600"}>
-          {v >= 0 ? "+" : ""}
-          {Number(v).toLocaleString()} ج.م
-        </span>
-      ),
-    },
+
   ];
 
   return (
