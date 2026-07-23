@@ -535,7 +535,11 @@ function CreateInvoice() {
           </div>
           <div className="field">
             <label > صوره الفاتورة </label>
-            <input type="file" className="form-control" onChange={(e) => setImage(e.target.files[0])} />
+            <input type="file"  
+              accept="image/*"
+              className="form-control"
+              onChange={(e) => setImage(e.target.files[0])}
+             />
           </div>
         </div>
       </section>
