@@ -40,7 +40,9 @@
     height: 100vh;
     overflow: hidden;
 }
-
+.card{
+    overflow-x: scroll;
+}
 .modal-header .btn-close {
 
     margin-left: inherit !important;
@@ -1595,3 +1597,53 @@ textarea {
 .swal2-toast {
     z-index: -1 !important;
 } 
+
+.nav-group-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: right; /* عشان انت شغال عربي RTL */
+}
+
+.nav-group-toggle .arrow {
+    margin-right: auto; /* يخليها على أقصى الشمال في RTL */
+    transition: transform 0.25s ease;
+}
+
+.nav-group-toggle .arrow.open {
+    transform: rotate(180deg);
+}
+
+/* الجزء المهم: الـ collapsible animation */
+.nav-subgroup {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+    overflow: hidden;
+}
+
+.nav-subgroup.open {
+    grid-template-rows: 1fr;
+}
+
+.nav-subgroup-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.nav-sub-item {
+    padding-right: 1.5rem; /* إزاحة شوية عن العنصر الأب (RTL) */
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    font-size: 16px;
+}
+
+.nav-subgroup.open .nav-sub-item {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.05s;
+}

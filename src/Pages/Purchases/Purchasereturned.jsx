@@ -3,33 +3,35 @@ import Swal from 'sweetalert2'
 import { apiFetch } from "@/Components/apiFetch";
 
 
-function Returned() {
+function PurchaseReturned() {
   const [searchId, setSearchId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [sale, setSale] = useState(null)
+  const [purchase, setPurchase] = useState(null)
 
   const [returnQuantities, setReturnQuantities] = useState({})
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const remainingQty = (item) => item.quantity - (item.returned_quantity || 0)
+  // الفرق الأساسي عن المبيعات: المتاح للإرجاع هو remaining_stock مباشرة
+  // (اللي لسه في المخزن ومترجعش قبل كده)، مش quantity - returned
+  const availableToReturn = (item) => item.remaining_stock
 
-  const fetchSale = async () => {
+  const fetchPurchase = async () => {
     const id = searchId.trim()
     if (!id) {
-      setError('من فضلك أدخل رقم الفاتورة')
+      setError('من فضلك أدخل رقم فاتورة المشتريات')
       return
     }
     setError('')
-    setSale(null)
+    setPurchase(null)
     setReturnQuantities({})
     setLoading(true)
     try {
-      const res = await apiFetch(`sales/${id}`)
+      const res = await apiFetch(`purchases/${id}`)
       const json = await res.json()
       if (res.ok && json.status) {
-        setSale(json.data.sale)
+        setPurchase(json.purchase) 
       } else {
         setError(json.message || 'لم يتم العثور على فاتورة بهذا الرقم')
       }
@@ -44,7 +46,7 @@ function Returned() {
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      fetchSale()
+      fetchPurchase()
     }
   }
 
@@ -52,7 +54,7 @@ function Returned() {
     setReturnQuantities((prev) => {
       const updated = { ...prev }
       if (checked) {
-        updated[item.id] = remainingQty(item)
+        updated[item.id] = availableToReturn(item)
       } else {
         delete updated[item.id]
       }
@@ -61,7 +63,7 @@ function Returned() {
   }
 
   const setItemQuantity = (item, value) => {
-    const max = remainingQty(item)
+    const max = availableToReturn(item)
     let qty = Number(value)
     if (Number.isNaN(qty)) qty = 0
     if (qty > max) qty = max
@@ -70,10 +72,10 @@ function Returned() {
   }
 
   const selectAll = () => {
-    if (!sale) return
+    if (!purchase) return
     const all = {}
-    sale.items.forEach((item) => {
-      const max = remainingQty(item)
+    purchase.items.forEach((item) => {
+      const max = availableToReturn(item)
       if (max > 0) all[item.id] = max
     })
     setReturnQuantities(all)
@@ -81,8 +83,8 @@ function Returned() {
 
   const clearSelection = () => setReturnQuantities({})
 
-  const selectedItems = sale
-    ? sale.items.filter((item) => (returnQuantities[item.id] || 0) > 0)
+  const selectedItems = purchase
+    ? purchase.items.filter((item) => (returnQuantities[item.id] || 0) > 0)
     : []
 
   const returnTotal = selectedItems.reduce(
@@ -91,14 +93,14 @@ function Returned() {
   )
 
   const handleSubmitReturn = async () => {
-    if (!sale) return
+    if (!purchase) return
     if (selectedItems.length === 0) {
       setError('اختر صنفًا واحدًا على الأقل لإرجاعه')
       return
     }
 
     const result = await Swal.fire({
-      title: 'تأكيد عملية الإرجاع',
+      title: 'تأكيد إرجاع المشتريات للمورد',
       text: `سيتم إرجاع ${selectedItems.length} صنف بإجمالي ${returnTotal.toFixed(2)} ج.م`,
       icon: 'warning',
       showCancelButton: true,
@@ -110,13 +112,13 @@ function Returned() {
     setSubmitting(true)
     setError('')
     try {
-      const res = await apiFetch(`sales/${sale.id}/return`, {
+      const res = await apiFetch(`purchases/${purchase.id}/return`, {
         method: 'POST',
-        headers:{"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           reason: reason || null,
           items: selectedItems.map((item) => ({
-            sale_item_id: item.id,
+            purchase_item_id: item.id,
             quantity: returnQuantities[item.id],
           })),
         }),
@@ -127,11 +129,11 @@ function Returned() {
           toast: true,
           position: 'top-start',
           icon: 'success',
-          title: 'تم تنفيذ الإرجاع بنجاح',
+          title: 'تم تنفيذ إرجاع المشتريات بنجاح',
           showConfirmButton: false,
           timer: 2500,
         })
-        setSale(json.data.sale)
+        setPurchase(json.data.sale) // عدّلها لو غيرت المفتاح
         setReturnQuantities({})
         setReason('')
       } else {
@@ -161,8 +163,8 @@ function Returned() {
   return (
     <div dir="rtl">
       <div className="page-header">
-        <h2>مرتجعات المبيعات</h2>
-        <p>ابحث برقم الفاتورة لاسترجاع كل أو بعض الأصناف</p>
+        <h2>مرتجعات المشتريات</h2>
+        <p>ابحث برقم فاتورة المشتريات لإرجاع كل أو بعض الأصناف للمورد</p>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -170,7 +172,7 @@ function Returned() {
       <div className="form-panel card-spacer" style={{ maxWidth: 'none' }}>
         <div className="search-row">
           <div className="form-group">
-            <label>رقم الفاتورة</label>
+            <label>رقم فاتورة المشتريات</label>
             <input
               type="text"
               value={searchId}
@@ -180,34 +182,34 @@ function Returned() {
               autoFocus
             />
           </div>
-          <button type="button" className="btn btn-primary" onClick={fetchSale} disabled={loading}>
+          <button type="button" className="btn btn-primary" onClick={fetchPurchase} disabled={loading}>
             {loading ? 'جارٍ البحث...' : 'بحث'}
           </button>
         </div>
       </div>
 
-      {sale && (
+      {purchase && (
         <>
           <div className="form-panel card-spacer" style={{ maxWidth: 'none' }}>
             <div className="section-title">
-              بيانات الفاتورة #{sale.id}
+              بيانات فاتورة المشتريات #{purchase.id}
             </div>
             <div className="invoice-summary">
               <div className="item">
-                <span className="label">العميل</span>
-                <span className="value">{sale.customer_name || 'عميل نقدي'}</span>
+                <span className="label">المورد</span>
+                <span className="value">{purchase.supplier?.name || '-'}</span>
               </div>
               <div className="item">
                 <span className="label">الإجمالي</span>
-                <span className="value">{sale.total} ج.م</span>
+                <span className="value">{purchase.total} ج.م</span>
               </div>
               <div className="item">
                 <span className="label">الحالة</span>
-                <span className="value">{statusBadge(sale.status)}</span>
+                <span className="value">{statusBadge(purchase.status)}</span>
               </div>
               <div className="item">
                 <span className="label">التاريخ</span>
-                <span className="value">{new Date(sale.created_at).toLocaleString('ar-EG')}</span>
+                <span className="value">{new Date(purchase.date || purchase.created_at).toLocaleString('ar-EG')}</span>
               </div>
             </div>
           </div>
@@ -215,7 +217,7 @@ function Returned() {
           <div className="table-wrap card-spacer">
             <div className="table-header">
               <div className="section-title" style={{ margin: 0 }}>
-                أصناف الفاتورة <span>({sale.items.length})</span>
+                أصناف الفاتورة <span>({purchase.items.length})</span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn btn-ghost btn-sm" onClick={selectAll}>
@@ -233,7 +235,7 @@ function Returned() {
                   <th></th>
                   <th>المنتج</th>
                   <th>الباركود</th>
-                  <th>الكمية المباعة</th>
+                  <th>الكمية المشتراة</th>
                   <th>مرتجع سابقًا</th>
                   <th>المتاح للإرجاع</th>
                   <th>الكمية المراد إرجاعها</th>
@@ -242,16 +244,16 @@ function Returned() {
                 </tr>
               </thead>
               <tbody>
-                {sale.items.map((item) => {
-                  const max = remainingQty(item)
+                {purchase.items.map((item) => {
+                  const max = availableToReturn(item)
                   const selectedQty = returnQuantities[item.id] || 0
-                  const fullyReturned = max === 0
+                  const noneAvailable = max === 0
                   return (
-                    <tr key={item.id} className={fullyReturned ? 'row-disabled' : ''}>
+                    <tr key={item.id} className={noneAvailable ? 'row-disabled' : ''}>
                       <td>
                         <input
                           type="checkbox"
-                          disabled={fullyReturned}
+                          disabled={noneAvailable}
                           checked={selectedQty > 0}
                           onChange={(e) => toggleItem(item, e.target.checked)}
                         />
@@ -267,7 +269,7 @@ function Returned() {
                           min="0"
                           max={max}
                           className="qty-input"
-                          disabled={fullyReturned || selectedQty === 0}
+                          disabled={noneAvailable || selectedQty === 0}
                           value={selectedQty}
                           onChange={(e) => setItemQuantity(item, e.target.value)}
                         />
@@ -290,7 +292,7 @@ function Returned() {
                 rows={2}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="مثال: منتج تالف، عميل غيّر رأيه..."
+                placeholder="مثال: منتج تالف، خطأ في الكمية المستلمة..."
               />
             </div>
           </div>
@@ -315,4 +317,4 @@ function Returned() {
   )
 }
 
-export default Returned
+export default PurchaseReturned

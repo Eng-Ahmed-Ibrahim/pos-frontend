@@ -52,8 +52,15 @@
 .login .bear-container {
     width: 180px;
     height: 160px;
-    margin: 0 auto;
+    /* margin: 0 auto; */
     position: relative;
+        display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+.login .bear-container img{
+    max-height: 100%;
 }
 
 .login .bear-svg {

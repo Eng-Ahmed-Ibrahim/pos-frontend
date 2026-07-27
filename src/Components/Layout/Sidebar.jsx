@@ -10,8 +10,10 @@ import {
     MdLayers,
     MdPeople,
     MdSecurity,
-    MdOutlineInventory
+    MdOutlineInventory, MdKeyboardArrowDown
 } from "react-icons/md";
+import { FaLeftLong } from "react-icons/fa6";
+
 import { TbReportAnalytics } from "react-icons/tb";
 import { PiKeyReturnLight } from "react-icons/pi";
 import { useAuth } from "../../context/AuthContext";
@@ -25,8 +27,9 @@ const API_BASE = import.meta.env.VITE_API_URL;
 
 function Sidebar() {
     const [count, setCount] = useState(0)
-    const { can ,systemSetting} = useAuth();
-    
+    const { can, systemSetting } = useAuth();
+    const [currentSubMenu, setDropMenu] = useState(null);
+
     const logout = () => {
         localStorage.clear()
         window.location.href = "/login";
@@ -67,46 +70,117 @@ function Sidebar() {
                         <div className="nav-section">
                             <div className="nav-label">المبيعات</div>
 
-                            {can('point_of_sale.view') && (
-                                <NavLink to="/point-of-sales" className="nav-item">
-                                    <span className="icon"><MdShoppingCart /></span>
-                                    نقطة البيع
-                                </NavLink>
+
+                            {(can('point_of_sale.view')) && (
+                                <div className="nav-group">
+                                    <button
+                                        type="button"
+                                        className="nav-item nav-group-toggle"
+                                        onClick={() => setDropMenu(currentSubMenu == 'sales' ? null : 'sales')}
+                                    >
+                                        <span className="icon"><MdShoppingCart /></span>
+                                        المبيعات
+                                        <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'sales' ? 'open' : ''}`} />
+                                    </button>
+
+                                    <div className={`nav-subgroup ${currentSubMenu == 'sales' ? 'open' : ''}`}>
+                                        <div className="nav-subgroup-inner">
+                                            {can('point_of_sale.view') && (
+                                                <NavLink to="/point-of-sales" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    نقطة البيع
+                                                </NavLink>
+                                            )}
+
+                                            {can('suppliers.view') && (
+                                                <NavLink to="/returns" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    مرتجعات المبيعات
+                                                </NavLink>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
-                            {can('point_of_sale.return') && (
-                                <NavLink to="/returns" className="nav-item">
-                                    <span className="icon"><MdReceipt /></span>
-                                    مرتجعات المبيعات
-                                </NavLink>
+                            {(can('invoices.view') || can('returns.view')) && (
+                                <div className="nav-group">
+                                    <button
+                                        type="button"
+                                        className="nav-item nav-group-toggle"
+                                        onClick={() => setDropMenu(currentSubMenu == 'purchases' ? null : 'purchases')}
+                                    >
+                                        <span className="icon"><MdReceipt /></span>
+                                        المشتريات
+                                        <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'purchases' ? 'open' : ''}`} />
+                                    </button>
+
+                                    <div className={`nav-subgroup ${currentSubMenu == 'purchases' ? 'open' : ''}`}>
+                                        <div className="nav-subgroup-inner">
+                                            {can('invoices.view') && (
+                                                <NavLink to="/invoices" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    فواتير
+                                                </NavLink>
+                                            )}
+
+                                            {can('suppliers.view') && (
+                                                <NavLink to="/suppliers" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    الموردين
+                                                </NavLink>
+                                            )}
+                                                <NavLink to="/invoice/return" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    مرتجعات
+                                                </NavLink>
+                                                <NavLink to="/waste" className="nav-item nav-sub-item">
+                                                    <span className="icon"><FaLeftLong /></span>
+                                                    الهالك
+                                                </NavLink>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
-                            {can('invoices.view') && (
-                                <NavLink to="/invoices" className="nav-item">
-                                    <span className="icon"><MdReceipt /></span>
-                                    المشتريات
-                                </NavLink>
-                            )}
 
-                            {can('suppliers.view') && (
-                                <NavLink to="/suppliers" className="nav-item">
-                                    <span className="icon"><MdLocalShipping /></span>
-                                    الموردين
-                                </NavLink>
-                            )}
 
-                            {/* {can('sales.view') && ( */}
-                                <NavLink to="/reports" className="nav-item">
+                            <div className="nav-group">
+                                <button
+                                    type="button"
+                                    className="nav-item nav-group-toggle"
+                                    onClick={() => setDropMenu(currentSubMenu == 'reports' ? null : 'reports')}
+                                >
                                     <span className="icon"><TbReportAnalytics /></span>
-                                    المبيعات
-                                </NavLink>
-                            {/* // )} */}
-                            {can('reports.view') && (
-                                <NavLink to="/warehouse-inventory" className="nav-item">
-                                    <span className="icon"><MdOutlineInventory /></span>
-                                    جرد المخزن
-                                </NavLink>
-                            )}
+                                    التقارير
+                                    <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'reports' ? 'open' : ''}`} />
+                                </button>
+
+                                <div className={`nav-subgroup ${currentSubMenu == 'reports' ? 'open' : ''}`}>
+                                    <div className="nav-subgroup-inner">
+                                        <NavLink to="/reports" className="nav-item nav-sub-item" style={{ fontSize: '15px' }}>
+                                            <span className="icon"><FaLeftLong /></span>
+                                            تقرير مبيعات المنتجات
+                                        </NavLink>
+                                        <NavLink to="/cashier-reports" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
+                                            <span className="icon"><FaLeftLong /></span>
+                                            تقرير مبيعات الكاشير
+                                        </NavLink>
+                                        {can('reports.view') && (
+                                            <NavLink to="/warehouse-inventory" className="nav-item nav-sub-item">
+                                                <span className="icon"><FaLeftLong /></span>
+                                                جرد المخزن
+                                            </NavLink>
+                                        )}
+                                        <NavLink to="/financial" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
+                                            <span className="icon"><FaLeftLong /></span>
+                                        الماليات
+                                        </NavLink>
+
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     )}
                 {(
@@ -128,6 +202,17 @@ function Sidebar() {
                                     المنتجات
                                 </NavLink>
                             )}
+                            {/* {can('products.view') && ( */}
+                                <NavLink
+                                    to="/units"
+                                    className={({ isActive }) =>
+                                        isActive ? "nav-item active" : "nav-item"
+                                    }
+                                >
+                                    <span className="icon"><MdInventory /></span>
+                                    الوحدات
+                                </NavLink>
+                            {/* )} */}
 
                             {can('categories.view') && (
                                 <NavLink
@@ -153,6 +238,10 @@ function Sidebar() {
                                 </NavLink>
                             )}
                         </div>
+
+
+
+
                     )}
                 {(can('users.view') || can('roles.view')) && (
                     <div className="nav-section">

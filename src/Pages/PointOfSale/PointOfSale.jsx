@@ -232,7 +232,8 @@ function PointOfSale() {
 
     const barcode = e.target.value.trim();
 
-    const product = products.find(
+    // 1) جرب المطابقة الكاملة الأول - أولوية دايمًا للباركود المخزن فعليًا
+    let product = products.find(
       p => String(p.barcode).trim() === barcode
     );
 
@@ -241,15 +242,52 @@ function PointOfSale() {
       resetSearchState();
       return;
     }
+
+    const SCALE_PREFIX = '20'; 
+    const BARCODE_LENGTH = 13;
+
+    if (barcode.length === BARCODE_LENGTH && barcode.startsWith(SCALE_PREFIX)) {
+      const weightGrams = barcode.slice(7, 12);
+      const productBarcode = barcode.slice(0, 7); // شامل الـ prefix
+      const weightKg = Number(weightGrams) / 1000;
+
+      const weightedProduct = products.find(
+      p => String(p.barcode).trim() === productBarcode
+    );;
+
+      // if (weightedProduct && weightKg > 0) {
+        addItemToCart(weightedProduct, weightKg, weightedProduct.price ?? 0);
+        resetSearchState();
+        return;
+      // }
+    }
+    // if (barcode.startsWith('00')) {
+    //   const weightGrams = barcode.slice(-5);           
+    //   const itemCode = barcode.slice(2, -5);         
+    //   const weightKg = Number(weightGrams) / 1000;
+
+    //   const weightedProduct = products.find(
+    //   p => String(p.barcode).trim() === itemCode
+    // );
+    //   console.log(`weightKg = ${weightKg} itemCode ${itemCode} weightedProduct ${weightedProduct} `);
+    //   console.log(products.map(p => `[${p.barcode}] length:${String(p.barcode).length}`));
+
+    //   if (weightedProduct && weightKg > 0) {
+    //     addItemToCart(weightedProduct, weightKg, weightedProduct.price ?? 0);
+    //     resetSearchState();
+    //     return;
+    //   }
+    // }
+
+    // 3) مفيش أي تطابق
     setDisplaySearchTerm('')
     Swal.fire({
       toast: true,
-      // position: "top-start",
       position: 'center',
       icon: "error",
-      title: 'الباركود غير موجود',
+      title: 'هذا المنتج غير متاح للبيع حاليا , يرجي التاكد من الكميه او السعر',
       showConfirmButton: false,
-      timer: 3000,
+      timer: 10000,
     });
   };
 
@@ -432,7 +470,7 @@ function PointOfSale() {
                     <div key={p.id} className="dropdown-item" onClick={() => handleSelectProduct(p)}>
                       <span className="dropdown-item-name">{p.name}</span>
                       <span className="dropdown-item-barcode">
-                        {p.barcode || '-'} 
+                        {p.barcode || '-'}
                       </span>
                     </div>
                   ))}

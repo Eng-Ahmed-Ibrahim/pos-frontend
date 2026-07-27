@@ -12,6 +12,7 @@
   "dependencies": {
     "@fontsource/cairo": "^5.2.7",
     "@tailwindcss/vite": "^4.3.1",
+    "antd": "^6.5.2",
     "bootstrap": "^5.3.8",
     "react": "^19.2.6",
     "react-barcode": "^1.6.1",
@@ -19,8 +20,10 @@
     "react-icons": "^5.6.0",
     "react-loading-indicators": "^1.0.1",
     "react-router-dom": "^7.17.0",
+    "react-select": "^5.10.2",
     "sweetalert2": "^11.26.25",
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
