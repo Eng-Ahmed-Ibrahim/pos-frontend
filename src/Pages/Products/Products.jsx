@@ -73,10 +73,6 @@ function Products() {
         setEditPrice(prod.price)
         setEditUnitId(prod.unit_id)
     }
-    useEffect(() => {
-        fetchProducts(1);
-    }, []);
-
     const handlePageChange = (newPage) => {
         fetchProducts(newPage);
     };
