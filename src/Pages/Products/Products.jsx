@@ -38,6 +38,7 @@ function Products() {
     const [editSubCategoryId, setEditSubCategoryId] = useState('');
     const { can } = useAuth();
     const token = localStorage.getItem("token");
+    
     const fetchProducts = async (pageNumber = 1) => {
         try {
             setLoading(true);
@@ -78,6 +79,7 @@ function Products() {
     };
 
     const addProduct = async () => {
+        console.log("loading ...")
         if (!name?.trim() || !categoryId || !barcodeNumber) {
             Swal.fire({
                 toast: true,
