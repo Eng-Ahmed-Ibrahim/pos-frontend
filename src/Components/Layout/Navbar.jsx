@@ -144,18 +144,12 @@ function Navbar() {
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowQuickMenu(!showQuickMenu)}
-              className="btn"
+              className=" btn btn-primary"
               style={{
-                background: '#8B5E3C',
-                color: '#fff',
-                border: 'none',
+
                 padding: '6px 14px',
-                borderRadius: '6px',
                 fontSize: '13px',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
                 fontWeight: '600'
               }}
             >
@@ -186,19 +180,16 @@ function Navbar() {
           </div>
 
           {can('point_of_sale.view') && (
-            <NavLink to="/point-of-sales" className="nav-item " style={{
-              background: '#8B5E3C',
-              color: '#fff',
-              border: 'none',
-              padding: '6px 14px',
-              borderRadius: '6px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontWeight: '600'
-            }}>
+            <NavLink to="/point-of-sales"
+              className=" btn btn-primary"
+              style={{
+
+                padding: '6px 14px',
+                fontSize: '13px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
               نقطة البيع
             </NavLink>
           )}

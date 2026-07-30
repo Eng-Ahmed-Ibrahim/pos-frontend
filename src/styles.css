@@ -16,22 +16,44 @@
     --card: #FFFFFF;
     --card2: #FAF7F4;
     --border: #E8E0D8;
-    --blue: #8B5E3C;
+    --blue: #803D3B;
 
     /* --blue-dim: #F2EAE2; */
-    --blue-dim: #8B5E3C;
+    --blue-dim: #803D3B;
 
     --green: #2D7A5F;
     --amber: #C4820A;
     --red: #C0392B;
     --purple: #7C5C9E;
     --text: #2C1F14;
-    --muted: #9A8070;
+    --muted: #292929;
     --white: #FFFFFF;
     --radius: 12px;
     --radius-sm: 8px;
 }
+.card-title{
+        background-color: var(--blue-dim) !important;
+            font-size: 24px;
+    font-weight: 900;
+    text-align: center;
+    color: #fff !important;
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin-bottom: 30px;
+    pointer-events: none;
 
+}
+.btn.disabled, .btn:disabled, fieldset:disabled .btn {
+    background-color: var(--blue-dim);
+}
+.field label , label {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: black !important;
+}
+.btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    background-color: var(--blue-dim);
+}
 #root {
     font-family: 'Inter', sans-serif;
     background: var(--bg);
@@ -136,11 +158,12 @@ td,th{
     padding: 9px 10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 500;
     color: var(--muted);
     transition: all .18s ease;
     margin-bottom: 2px;
+    font-weight: 700;
 }
 
 .nav-item:hover {
@@ -266,7 +289,8 @@ td,th{
 }
 
 .btn-primary:hover {
-    background: #6D4A2E;
+    background: var(--blue);
+    opacity: 0.9;
 }
 
 .btn-ghost {
@@ -328,6 +352,7 @@ td,th{
 .content {
     flex: 1;
     overflow-y: auto;
+        background: #ebebebc4 !important;
     padding: 24px;
 }
 

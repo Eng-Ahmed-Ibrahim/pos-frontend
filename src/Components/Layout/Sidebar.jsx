@@ -60,89 +60,105 @@ function Sidebar() {
                     </div>
                 )}
 
-                {(
-                    can('point_of_sale.view') ||
-                    can('point_of_sale.return') ||
-                    can('invoices.view') ||
-                    can('suppliers.view') ||
-                    can('reports.view')
-                ) && (
-                        <div className="nav-section">
-                            <div className="nav-label">المبيعات</div>
 
+                <div className="nav-section">
+                    {(
+                        can('point_of_sale.view') ||
+                        can('point_of_sale.return')
+                    ) && (
 
-                            {(can('point_of_sale.view')) && (
-                                <div className="nav-group">
-                                    <button
-                                        type="button"
-                                        className="nav-item nav-group-toggle"
-                                        onClick={() => setDropMenu(currentSubMenu == 'sales' ? null : 'sales')}
-                                    >
-                                        <span className="icon"><MdShoppingCart /></span>
-                                        المبيعات
-                                        <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'sales' ? 'open' : ''}`} />
-                                    </button>
+                            <>
+                                <div className="nav-label">المبيعات</div>
 
-                                    <div className={`nav-subgroup ${currentSubMenu == 'sales' ? 'open' : ''}`}>
-                                        <div className="nav-subgroup-inner">
-                                            {can('point_of_sale.view') && (
-                                                <NavLink to="/point-of-sales" className="nav-item nav-sub-item">
-                                                    <span className="icon"><FaLeftLong /></span>
-                                                    نقطة البيع
-                                                </NavLink>
-                                            )}
+                                {(can('point_of_sale.view')) && (
+                                    <div className="nav-group">
+                                        <button
+                                            type="button"
+                                            className="nav-item nav-group-toggle"
+                                            onClick={() => setDropMenu(currentSubMenu == 'sales' ? null : 'sales')}
+                                        >
+                                            <span className="icon"><MdShoppingCart /></span>
+                                            المبيعات
+                                            <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'sales' ? 'open' : ''}`} />
+                                        </button>
 
-                                            {can('suppliers.view') && (
-                                                <NavLink to="/returns" className="nav-item nav-sub-item">
-                                                    <span className="icon"><FaLeftLong /></span>
-                                                    مرتجعات المبيعات
-                                                </NavLink>
-                                            )}
+                                        <div className={`nav-subgroup ${currentSubMenu == 'sales' ? 'open' : ''}`}>
+                                            <div className="nav-subgroup-inner">
+                                                {can('point_of_sale.view') && (
+                                                    <NavLink to="/point-of-sales" className="nav-item nav-sub-item">
+                                                        <span className="icon"><FaLeftLong /></span>
+                                                        نقطة البيع
+                                                    </NavLink>
+                                                )}
+
+                                                {can('point_of_sale.return') && (
+                                                    <NavLink to="/returns" className="nav-item nav-sub-item">
+                                                        <span className="icon"><FaLeftLong /></span>
+                                                        مرتجعات المبيعات
+                                                    </NavLink>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+                                )}
+                            </>
+
+                        )}
+
+                    {(can('invoices.view') || can('invoices.view_returend') || can('invoices.view_wasteed') || can('suppliers.view')) && (
+                        <div className="nav-group">
+                            <button
+                                type="button"
+                                className="nav-item nav-group-toggle"
+                                onClick={() => setDropMenu(currentSubMenu == 'purchases' ? null : 'purchases')}
+                            >
+                                <span className="icon"><MdReceipt /></span>
+                                المشتريات
+                                <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'purchases' ? 'open' : ''}`} />
+                            </button>
+
+                            <div className={`nav-subgroup ${currentSubMenu == 'purchases' ? 'open' : ''}`}>
+                                <div className="nav-subgroup-inner">
+                                    {can('invoices.view') && (
+                                        <NavLink to="/invoices" className="nav-item nav-sub-item">
+                                            <span className="icon"><FaLeftLong /></span>
+                                            فواتير
+                                        </NavLink>
+                                    )}
+
+                                    {can('suppliers.view') && (
+                                        <NavLink to="/suppliers" className="nav-item nav-sub-item">
+                                            <span className="icon"><FaLeftLong /></span>
+                                            الموردين
+                                        </NavLink>
+                                    )}
+                                    {can('invoices.view_returend') && (
+
+                                        <NavLink to="/invoice/return" className="nav-item nav-sub-item">
+                                            <span className="icon"><FaLeftLong /></span>
+                                            مرتجعات
+                                        </NavLink>
+                                    )}
+                                    {can('invoices.view_wasteed') && (
+
+                                        <NavLink to="/waste" className="nav-item nav-sub-item">
+                                            <span className="icon"><FaLeftLong /></span>
+                                            الهالك
+                                        </NavLink>
+                                    )}
                                 </div>
-                            )}
+                            </div>
+                        </div>
+                    )}
 
-                            {(can('invoices.view') || can('returns.view')) && (
-                                <div className="nav-group">
-                                    <button
-                                        type="button"
-                                        className="nav-item nav-group-toggle"
-                                        onClick={() => setDropMenu(currentSubMenu == 'purchases' ? null : 'purchases')}
-                                    >
-                                        <span className="icon"><MdReceipt /></span>
-                                        المشتريات
-                                        <MdKeyboardArrowDown className={`arrow ${currentSubMenu == 'purchases' ? 'open' : ''}`} />
-                                    </button>
 
-                                    <div className={`nav-subgroup ${currentSubMenu == 'purchases' ? 'open' : ''}`}>
-                                        <div className="nav-subgroup-inner">
-                                            {can('invoices.view') && (
-                                                <NavLink to="/invoices" className="nav-item nav-sub-item">
-                                                    <span className="icon"><FaLeftLong /></span>
-                                                    فواتير
-                                                </NavLink>
-                                            )}
 
-                                            {can('suppliers.view') && (
-                                                <NavLink to="/suppliers" className="nav-item nav-sub-item">
-                                                    <span className="icon"><FaLeftLong /></span>
-                                                    الموردين
-                                                </NavLink>
-                                            )}
-                                                <NavLink to="/invoice/return" className="nav-item nav-sub-item">
-                                                    <span className="icon"><FaLeftLong /></span>
-                                                    مرتجعات
-                                                </NavLink>
-                                                <NavLink to="/waste" className="nav-item nav-sub-item">
-                                                    <span className="icon"><FaLeftLong /></span>
-                                                    الهالك
-                                                </NavLink>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
+                    {(
+                        can('reports.view_sales_products') ||
+                        can('reports.view_sales_cashier') ||
+                        can('reports.view_warehouse_inventory') ||
+                        can('reports.view_financial')
+                    ) && (
 
 
                             <div className="nav-group">
@@ -158,31 +174,40 @@ function Sidebar() {
 
                                 <div className={`nav-subgroup ${currentSubMenu == 'reports' ? 'open' : ''}`}>
                                     <div className="nav-subgroup-inner">
-                                        <NavLink to="/reports" className="nav-item nav-sub-item" style={{ fontSize: '15px' }}>
-                                            <span className="icon"><FaLeftLong /></span>
-                                            تقرير مبيعات المنتجات
-                                        </NavLink>
-                                        <NavLink to="/cashier-reports" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
-                                            <span className="icon"><FaLeftLong /></span>
-                                            تقرير مبيعات الكاشير
-                                        </NavLink>
-                                        {can('reports.view') && (
+                                        {can('reports.view_sales_products') && (
+                                            <NavLink to="/reports" className="nav-item nav-sub-item" style={{ fontSize: '15px' }}>
+                                                <span className="icon"><FaLeftLong /></span>
+                                                تقرير مبيعات المنتجات
+                                            </NavLink>
+                                        )}
+                                        {can('reports.view_sales_cashier') && (
+                                            <NavLink to="/cashier-reports" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
+                                                <span className="icon"><FaLeftLong /></span>
+                                                تقرير مبيعات الكاشير
+                                            </NavLink>
+                                        )}
+                                        {can('reports.view_warehouse_inventory') && (
                                             <NavLink to="/warehouse-inventory" className="nav-item nav-sub-item">
                                                 <span className="icon"><FaLeftLong /></span>
                                                 جرد المخزن
                                             </NavLink>
                                         )}
-                                        <NavLink to="/financial" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
-                                            <span className="icon"><FaLeftLong /></span>
-                                        الماليات
-                                        </NavLink>
+                                        {can('reports.view_financial') && (
+                                            <NavLink to="/financial" className="nav-item nav-sub-item" style={{ fontSize: '16px' }}>
+                                                <span className="icon"><FaLeftLong /></span>
+                                                الماليات
+                                            </NavLink>
+                                        )}
 
                                     </div>
                                 </div>
                             </div>
+                        )}
 
-                        </div>
-                    )}
+
+                </div>
+
+
                 {(
                     can('products.view') ||
                     can('categories.view') ||
@@ -203,15 +228,15 @@ function Sidebar() {
                                 </NavLink>
                             )}
                             {/* {can('products.view') && ( */}
-                                <NavLink
-                                    to="/units"
-                                    className={({ isActive }) =>
-                                        isActive ? "nav-item active" : "nav-item"
-                                    }
-                                >
-                                    <span className="icon"><MdInventory /></span>
-                                    الوحدات
-                                </NavLink>
+                            <NavLink
+                                to="/units"
+                                className={({ isActive }) =>
+                                    isActive ? "nav-item active" : "nav-item"
+                                }
+                            >
+                                <span className="icon"><MdInventory /></span>
+                                الوحدات
+                            </NavLink>
                             {/* )} */}
 
                             {can('categories.view') && (

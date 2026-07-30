@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import './SaleInvoicePrint.css' // استايل الفاتورة نفسها + كلاسات التحكم فى الطباعة
+// import './SaleInvoicePrint.css' // استايل الفاتورة نفسها + كلاسات التحكم فى الطباعة
 import SaleInvoicePrint from './SaleInvoicePrint';
 import { apiFetch } from "@/Components/apiFetch";
 import Swal from "sweetalert2";

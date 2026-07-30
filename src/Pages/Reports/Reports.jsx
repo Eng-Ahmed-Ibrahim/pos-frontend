@@ -120,7 +120,7 @@ function Reports() {
             </>
           )}
           <div className="col-md-2">
-            <button type="submit" className="btn w-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#8B5E3C', color: '#fff' }}>
+            <button type="submit" className="btn btn-primary w-100 d-flex align-items-center justify-content-center">
               <FiFilter className="me-2" /> فلتر
             </button>
           </div>
