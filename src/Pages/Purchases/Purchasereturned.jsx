@@ -1,39 +1,56 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
 import { apiFetch } from "@/Components/apiFetch";
 
+// Debounce بسيط للبحث عشان منضربش API مع كل حرف
+function useDebouncedValue(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(t)
+  }, [value, delay])
+  return debounced
+}
 
 function PurchaseReturned() {
-  const [searchId, setSearchId] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [purchase, setPurchase] = useState(null)
 
-  const [returnQuantities, setReturnQuantities] = useState({})
+  const [suppliers, setSuppliers] = useState([])
+  const [categories, setCategories] = useState([])
+
+  const [supplierId, setSupplierId] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 400)
+
+  const [products, setProducts] = useState([])
+  const [productsLoading, setProductsLoading] = useState(false)
+  const [pagination, setPagination] = useState(null) // { current_page, last_page, ... }
+
+  // { [product_id]: { quantity, max, name, barcode, price } }
+  const [selected, setSelected] = useState({})
+
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // الفرق الأساسي عن المبيعات: المتاح للإرجاع هو remaining_stock مباشرة
-  // (اللي لسه في المخزن ومترجعش قبل كده)، مش quantity - returned
-  const availableToReturn = (item) => item.remaining_stock
+  const requestSeq = useRef(0)
 
-  const fetchPurchase = async () => {
-    const id = searchId.trim()
-    if (!id) {
-      setError('من فضلك أدخل رقم فاتورة المشتريات')
-      return
-    }
-    setError('')
-    setPurchase(null)
-    setReturnQuantities({})
+  useEffect(() => {
+    fetchInitialData()
+  }, [])
+
+  const fetchInitialData = async () => {
     setLoading(true)
+    setError('')
     try {
-      const res = await apiFetch(`purchases/${id}`)
+      const res = await apiFetch(`purchase/return`)
       const json = await res.json()
       if (res.ok && json.status) {
-        setPurchase(json.purchase) 
+        setSuppliers(json.suppliers || [])
+        setCategories(json.categories || [])
       } else {
-        setError(json.message || 'لم يتم العثور على فاتورة بهذا الرقم')
+        setError(json.message || 'تعذر تحميل بيانات الصفحة')
       }
     } catch (err) {
       console.error(err)
@@ -43,65 +60,124 @@ function PurchaseReturned() {
     }
   }
 
-  const handleSearchKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      fetchPurchase()
+  // كل ما المورد أو القسم أو البحث يتغيروا، هات المنتجات من أول صفحة
+  useEffect(() => {
+    if (!supplierId) {
+      setProducts([])
+      setPagination(null)
+      return
+    }
+    fetchProducts(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplierId, categoryId, debouncedSearch])
+
+  const fetchProducts = async (page = 1) => {
+    if (!supplierId) return
+    const seq = ++requestSeq.current
+    setProductsLoading(true)
+    setError('')
+    try {
+      const params = new URLSearchParams({
+        supplier_id: supplierId,
+        page: String(page),
+      })
+      if (categoryId) params.append('category_id', categoryId)
+      if (debouncedSearch.trim()) params.append('search', debouncedSearch.trim())
+
+      const res = await apiFetch(`purchase/return/products?${params.toString()}`)
+      const json = await res.json()
+
+      // لو فيه طلب أحدث بعده اتبعت، تجاهل النتيجة القديمة دي
+      if (seq !== requestSeq.current) return
+
+      if (res.ok && json.status) {
+        const list = json.products?.data || []
+        setProducts(list)
+        setPagination(json.products || null)
+      } else {
+        setError(json.message || 'تعذر تحميل منتجات المورد')
+        setProducts([])
+      }
+    } catch (err) {
+      console.error(err)
+      if (seq === requestSeq.current) {
+        setError('تعذر الاتصال بالخادم')
+        setProducts([])
+      }
+    } finally {
+      if (seq === requestSeq.current) setProductsLoading(false)
     }
   }
 
-  const toggleItem = (item, checked) => {
-    setReturnQuantities((prev) => {
+  const toggleProduct = (product, checked) => {
+    setSelected((prev) => {
       const updated = { ...prev }
       if (checked) {
-        updated[item.id] = availableToReturn(item)
+        updated[product.product_id] = {
+          quantity: product.available_qty,
+          max: product.available_qty,
+          name: product.product_name,
+          barcode: product.product_barcode,
+          price: product.last_price,
+        }
       } else {
-        delete updated[item.id]
+        delete updated[product.product_id]
       }
       return updated
     })
   }
 
-  const setItemQuantity = (item, value) => {
-    const max = availableToReturn(item)
+  const setProductQuantity = (product, value) => {
     let qty = Number(value)
     if (Number.isNaN(qty)) qty = 0
-    if (qty > max) qty = max
+    if (qty > product.available_qty) qty = product.available_qty
     if (qty < 0) qty = 0
-    setReturnQuantities((prev) => ({ ...prev, [item.id]: qty }))
+    setSelected((prev) => ({
+      ...prev,
+      [product.product_id]: {
+        quantity: qty,
+        max: product.available_qty,
+        name: product.product_name,
+        barcode: product.product_barcode,
+        price: product.last_price,
+      },
+    }))
   }
 
-  const selectAll = () => {
-    if (!purchase) return
-    const all = {}
-    purchase.items.forEach((item) => {
-      const max = availableToReturn(item)
-      if (max > 0) all[item.id] = max
+  const removeSelected = (productId) => {
+    setSelected((prev) => {
+      const updated = { ...prev }
+      delete updated[productId]
+      return updated
     })
-    setReturnQuantities(all)
   }
 
-  const clearSelection = () => setReturnQuantities({})
+  const selectedList = useMemo(
+    () =>
+      Object.entries(selected)
+        .filter(([, v]) => v.quantity > 0)
+        .map(([productId, v]) => ({ productId: Number(productId), ...v })),
+    [selected]
+  )
 
-  const selectedItems = purchase
-    ? purchase.items.filter((item) => (returnQuantities[item.id] || 0) > 0)
-    : []
-
-  const returnTotal = selectedItems.reduce(
-    (sum, item) => sum + returnQuantities[item.id] * Number(item.price),
-    0
+  const returnTotal = useMemo(
+    () => selectedList.reduce((sum, it) => sum + it.quantity * Number(it.price || 0), 0),
+    [selectedList]
   )
 
   const handleSubmitReturn = async () => {
-    if (!purchase) return
-    if (selectedItems.length === 0) {
+    if (!supplierId) {
+      setError('اختر المورد أولًا')
+      return
+    }
+    if (selectedList.length === 0) {
       setError('اختر صنفًا واحدًا على الأقل لإرجاعه')
       return
     }
 
     const result = await Swal.fire({
       title: 'تأكيد إرجاع المشتريات للمورد',
-      text: `سيتم إرجاع ${selectedItems.length} صنف بإجمالي ${returnTotal.toFixed(2)} ج.م`,
+      text: `سيتم إرجاع ${selectedList.length} صنف بإجمالي ${returnTotal.toFixed(2)} ج.م`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'نعم، تنفيذ الإرجاع',
@@ -112,14 +188,15 @@ function PurchaseReturned() {
     setSubmitting(true)
     setError('')
     try {
-      const res = await apiFetch(`purchases/${purchase.id}/return`, {
+      const res = await apiFetch(`purchase/return`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          supplier_id: supplierId,
           reason: reason || null,
-          items: selectedItems.map((item) => ({
-            purchase_item_id: item.id,
-            quantity: returnQuantities[item.id],
+          items: selectedList.map((it) => ({
+            product_id: it.productId,
+            quantity: it.quantity,
           })),
         }),
       })
@@ -133,9 +210,9 @@ function PurchaseReturned() {
           showConfirmButton: false,
           timer: 2500,
         })
-        setPurchase(json.data.sale) // عدّلها لو غيرت المفتاح
-        setReturnQuantities({})
+        setSelected({})
         setReason('')
+        fetchProducts(pagination?.current_page || 1) // تحديث الكميات المتاحة
       } else {
         setError(json.message || 'فشلت عملية الإرجاع')
       }
@@ -147,85 +224,70 @@ function PurchaseReturned() {
     }
   }
 
-  const statusBadge = (status) => {
-    switch (status) {
-      case 'completed':
-        return <span className="badge badge-green">مكتملة</span>
-      case 'partially_returned':
-        return <span className="badge badge-amber">مرتجعة جزئيًا</span>
-      case 'returned':
-        return <span className="badge badge-red">مرتجعة بالكامل</span>
-      default:
-        return <span className="badge badge-blue">{status}</span>
-    }
+  if (loading) {
+    return (
+      <div dir="rtl">
+        <p>جارٍ التحميل...</p>
+      </div>
+    )
   }
 
   return (
     <div dir="rtl">
       <div className="page-header">
         <h2>مرتجعات المشتريات</h2>
-        <p>ابحث برقم فاتورة المشتريات لإرجاع كل أو بعض الأصناف للمورد</p>
+        <p>اختر المورد، ابحث عن المنتج بالاسم أو الباركود، وحدد الكمية المراد إرجاعها</p>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="form-panel card-spacer" style={{ maxWidth: 'none' }}>
-        <div className="search-row">
+        <div className="search-row" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div className="form-group">
-            <label>رقم فاتورة المشتريات</label>
+            <label>المورد</label>
+            <select value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setSelected({}) }}>
+              <option value="">-- اختر المورد --</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>القسم</label>
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <option value="">كل الأقسام</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group" style={{ flex: 1, minWidth: 220 }}>
+            <label>بحث بالاسم أو الباركود</label>
             <input
               type="text"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="ادخل رقم الفاتورة..."
-              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="اكتب اسم المنتج أو الباركود..."
+              disabled={!supplierId}
             />
           </div>
-          <button type="button" className="btn btn-primary" onClick={fetchPurchase} disabled={loading}>
-            {loading ? 'جارٍ البحث...' : 'بحث'}
-          </button>
         </div>
       </div>
 
-      {purchase && (
-        <>
-          <div className="form-panel card-spacer" style={{ maxWidth: 'none' }}>
-            <div className="section-title">
-              بيانات فاتورة المشتريات #{purchase.id}
-            </div>
-            <div className="invoice-summary">
-              <div className="item">
-                <span className="label">المورد</span>
-                <span className="value">{purchase.supplier?.name || '-'}</span>
-              </div>
-              <div className="item">
-                <span className="label">الإجمالي</span>
-                <span className="value">{purchase.total} ج.م</span>
-              </div>
-              <div className="item">
-                <span className="label">الحالة</span>
-                <span className="value">{statusBadge(purchase.status)}</span>
-              </div>
-              <div className="item">
-                <span className="label">التاريخ</span>
-                <span className="value">{new Date(purchase.date || purchase.created_at).toLocaleString('ar-EG')}</span>
-              </div>
-            </div>
-          </div>
+      {!supplierId && (
+        <div className="form-panel" style={{ maxWidth: 'none', textAlign: 'center', color: '#888' }}>
+          اختر مورد الأول عشان تظهر منتجاته
+        </div>
+      )}
 
+      {supplierId && (
+        <>
           <div className="table-wrap card-spacer">
             <div className="table-header">
               <div className="section-title" style={{ margin: 0 }}>
-                أصناف الفاتورة <span>({purchase.items.length})</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={selectAll}>
-                  تحديد الكل (إرجاع كامل)
-                </button>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={clearSelection}>
-                  إلغاء التحديد
-                </button>
+                منتجات المورد {productsLoading && <span style={{ fontSize: 12, color: '#888' }}>(جارٍ التحميل...)</span>}
               </div>
             </div>
 
@@ -235,55 +297,116 @@ function PurchaseReturned() {
                   <th></th>
                   <th>المنتج</th>
                   <th>الباركود</th>
-                  <th>الكمية المشتراة</th>
-                  <th>مرتجع سابقًا</th>
                   <th>المتاح للإرجاع</th>
-                  <th>الكمية المراد إرجاعها</th>
                   <th>السعر</th>
+                  <th>الكمية المراد إرجاعها</th>
                   <th>إجمالي الإرجاع</th>
                 </tr>
               </thead>
               <tbody>
-                {purchase.items.map((item) => {
-                  const max = availableToReturn(item)
-                  const selectedQty = returnQuantities[item.id] || 0
-                  const noneAvailable = max === 0
+                {products.length === 0 && !productsLoading && (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', color: '#888' }}>
+                      لا يوجد منتجات متاحة للإرجاع بهذه الشروط
+                    </td>
+                  </tr>
+                )}
+                {products.map((product) => {
+                  const sel = selected[product.product_id]
+                  const selectedQty = sel?.quantity || 0
                   return (
-                    <tr key={item.id} className={noneAvailable ? 'row-disabled' : ''}>
+                    <tr key={product.product_id}>
                       <td>
                         <input
                           type="checkbox"
-                          disabled={noneAvailable}
                           checked={selectedQty > 0}
-                          onChange={(e) => toggleItem(item, e.target.checked)}
+                          onChange={(e) => toggleProduct(product, e.target.checked)}
                         />
                       </td>
-                      <td>{item.product?.name}</td>
-                      <td className="muted">{item.product?.barcode || '-'}</td>
-                      <td>{item.quantity}</td>
-                      <td>{item.returned_quantity || 0}</td>
-                      <td>{max}</td>
+                      <td>{product.product_name}</td>
+                      <td className="muted">{product.product_barcode || '-'}</td>
+                      <td>{product.available_qty}</td>
+                      <td>{product.last_price}</td>
                       <td>
                         <input
                           type="number"
                           min="0"
-                          max={max}
+                          max={product.available_qty}
                           className="qty-input"
-                          disabled={noneAvailable || selectedQty === 0}
+                          disabled={selectedQty === 0}
                           value={selectedQty}
-                          onChange={(e) => setItemQuantity(item, e.target.value)}
+                          onChange={(e) => setProductQuantity(product, e.target.value)}
                         />
                       </td>
-                      <td>{item.price}</td>
                       <td style={{ fontWeight: 700 }}>
-                        {(selectedQty * Number(item.price)).toFixed(2)}
+                        {(selectedQty * Number(product.last_price || 0)).toFixed(2)}
                       </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
+
+            {pagination && pagination.last_page > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: 12 }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  disabled={pagination.current_page <= 1 || productsLoading}
+                  onClick={() => fetchProducts(pagination.current_page - 1)}
+                >
+                  السابق
+                </button>
+                <span style={{ alignSelf: 'center' }}>
+                  صفحة {pagination.current_page} من {pagination.last_page}
+                </span>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  disabled={pagination.current_page >= pagination.last_page || productsLoading}
+                  onClick={() => fetchProducts(pagination.current_page + 1)}
+                >
+                  التالي
+                </button>
+              </div>
+            )}
           </div>
+
+          {selectedList.length > 0 && (
+            <div className="table-wrap card-spacer">
+              <div className="table-header">
+                <div className="section-title" style={{ margin: 0 }}>
+                  الأصناف المحددة للإرجاع <span>({selectedList.length})</span>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>المنتج</th>
+                    <th>الباركود</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>الإجمالي</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedList.map((it) => (
+                    <tr key={it.productId}>
+                      <td>{it.name}</td>
+                      <td className="muted">{it.barcode || '-'}</td>
+                      <td>{it.quantity}</td>
+                      <td>{it.price}</td>
+                      <td style={{ fontWeight: 700 }}>{(it.quantity * Number(it.price || 0)).toFixed(2)}</td>
+                      <td>
+                        <button className="btn btn-ghost btn-sm" onClick={() => removeSelected(it.productId)}>
+                          إزالة
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <div className="form-panel card-spacer" style={{ maxWidth: 'none' }}>
             <div className="form-group full">
@@ -305,7 +428,7 @@ function PurchaseReturned() {
             <button
               type="button"
               className="return-btn"
-              disabled={submitting || selectedItems.length === 0}
+              disabled={submitting || selectedList.length === 0}
               onClick={handleSubmitReturn}
             >
               {submitting ? 'جارٍ تنفيذ الإرجاع...' : 'تنفيذ الإرجاع'}

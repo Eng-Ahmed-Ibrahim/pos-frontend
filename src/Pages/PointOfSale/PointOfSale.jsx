@@ -397,9 +397,6 @@ function PointOfSale() {
           showConfirmButton: false,
           timer: 3000,
         });
-
-        setCompletedSale(json.data)
-        setInvoiceId(json.data.id)
       } else {
         Swal.fire({
           toast: true,
