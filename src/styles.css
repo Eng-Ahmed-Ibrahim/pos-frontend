@@ -62,14 +62,13 @@
     height: 100vh;
     overflow: hidden;
 }
-.card{
-    overflow-x: scroll;
-}
 .modal-header .btn-close {
 
     margin-left: inherit !important;
 }
-
+input{
+  min-width: 100px !important;
+}
 .modal-header {
     justify-content: space-between;
 }
@@ -91,7 +90,7 @@ a {
 }
 
 .dar-logo {
-    width: 70px;
+    width: 100px;
 }
 td,th{
     text-align: center !important;

@@ -4,6 +4,8 @@ import { apiFetch } from "@/Components/apiFetch";
 
 function CashierReports() {
     const [sales, setSales] = useState([]);
+    const [totalCashPrice, setTotalCashPrice] = useState(0);
+    const [totalVisaPrice, setTotalVisaPrice] = useState(0);
     const [totalPrice, setTotalPrice] = useState(0);
     const today = new Date().toISOString().split("T")[0];
 
@@ -24,7 +26,11 @@ function CashierReports() {
             const response = await apiFetch(`cashier-reports?${filterParamters}`);
             const data = await response.json();
             setSales(data.data.sales);
-            setTotalPrice(data.data.total_price)
+            setTotalCashPrice(data.data.total_cash_price)
+            setTotalVisaPrice(data.data.total_visa_price)
+            setTotalPrice(
+                Number(data.data.total_cash_price) + Number(data.data.total_visa_price)
+            ); 
             setCashiers(data.data.cashiers)
         } catch (error) {
             console.log(error);
@@ -152,12 +158,99 @@ function CashierReports() {
                             color: "#198754",
                         }}
                     >
-                        {Number(totalPrice).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                        })}{" "}
-                        جنيه
+                        <div>
+                            كاش:{" "}
+                            {Number(totalCashPrice).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}{" "}
+                            جنيه
+                        </div>
+
+
                     </div>
+
+                </div>
+                <div
+                    style={{
+                        background: "#fff",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        minWidth: "250px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,.08)",
+                        borderLeft: "5px solid #198754",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "14px",
+                            color: "#6c757d",
+                            marginBottom: "8px",
+                        }}
+                    >
+                        إجمالي المبيعات
+                    </div>
+
+                    <div
+                        style={{
+                            fontSize: "30px",
+                            fontWeight: "bold",
+                            color: "#198754",
+                        }}
+                    >
+                        <div>
+                            فيزا:{" "}
+                            {Number(totalVisaPrice).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}{" "}
+                            جنيه
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+                <div
+                    style={{
+                        background: "#fff",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        minWidth: "250px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,.08)",
+                        borderLeft: "5px solid #198754",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "14px",
+                            color: "#6c757d",
+                            marginBottom: "8px",
+                        }}
+                    >
+                        إجمالي المبيعات
+                    </div>
+
+                    <div
+                        style={{
+                            fontSize: "30px",
+                            fontWeight: "bold",
+                            color: "#198754",
+                        }}
+                    >
+                        <div>
+                            :{" "}
+                            {Number(totalPrice).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}{" "}
+                            جنيه
+                        </div>
+
+
+                    </div>
+
                 </div>
             </div>
             <div className="table-wrapper">
@@ -168,7 +261,7 @@ function CashierReports() {
                             <th>الكاشير</th>
                             <th>المنتجات</th>
                             <th>الملبغ</th>
-                            {/* <th>المدفوع</th> */}
+                            <th>طريقه الدفع</th>
                             <th>التاريخ</th>
                         </tr>
                     </thead>
@@ -192,8 +285,15 @@ function CashierReports() {
 
                                 <td>{sale.total}</td>
 
-                                {/* <td>{sale.amount_paid ?? "-"}</td> */}
-
+                                <td>
+                                    {sale.payment_method === "cash" ? (
+                                        <span className="badge bg-success py-2 px-3  bold"> كاش</span>
+                                    ) : sale.payment_method === "visa" ? (
+                                        <span className="badge bg-primary py-2 px-3  bold"> فيزا</span>
+                                    ) : (
+                                        <span className="badge bg-secondary">-- </span>
+                                    )}
+                                </td>
                                 <td className="muted">
                                     {new Date(sale.created_at).toLocaleString('ar-EG')}
                                 </td>

@@ -8,7 +8,7 @@ const API_BASE = import.meta.env.VITE_API_URL
 const token = localStorage.getItem("token");
 
 function PointOfSale() {
-  const addSound = new Audio('./beep.mp3');
+  // const addSound = new Audio('./beep.mp3');
 
   // ---------- بيانات المنتجات ----------
   const [products, setProducts] = useState([])
@@ -33,6 +33,7 @@ function PointOfSale() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [itemPrice, setItemPrice] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('cash')
 
   const searchInputRef = useRef(null)
   const quantityInputRef = useRef(null)
@@ -217,7 +218,7 @@ function PointOfSale() {
       timer: 3000,
     });
 
-    addSound.play();
+    // addSound.play();
   }
 
   const handleSearchChange = (value) => {
@@ -243,7 +244,7 @@ function PointOfSale() {
       return;
     }
 
-    const SCALE_PREFIX = '20'; 
+    const SCALE_PREFIX = '20';
     const BARCODE_LENGTH = 13;
 
     if (barcode.length === BARCODE_LENGTH && barcode.startsWith(SCALE_PREFIX)) {
@@ -252,13 +253,13 @@ function PointOfSale() {
       const weightKg = Number(weightGrams) / 1000;
 
       const weightedProduct = products.find(
-      p => String(p.barcode).trim() === productBarcode
-    );;
+        p => String(p.barcode).trim() === productBarcode
+      );;
 
       // if (weightedProduct && weightKg > 0) {
-        addItemToCart(weightedProduct, weightKg, weightedProduct.price ?? 0);
-        resetSearchState();
-        return;
+      addItemToCart(weightedProduct, weightKg, weightedProduct.price ?? 0);
+      resetSearchState();
+      return;
       // }
     }
     // if (barcode.startsWith('00')) {
@@ -325,7 +326,7 @@ function PointOfSale() {
   }
 
   const handleRemoveItem = (productId) => {
-    addSound.play();
+    // addSound.play();
     setItems((prev) => prev.filter((i) => i.product_id !== productId))
   }
 
@@ -377,6 +378,7 @@ function PointOfSale() {
         body: JSON.stringify({
           customer_name: customerName || null,
           amount_paid: amountPaid === '' ? null : Number(amountPaid),
+          payment_method : paymentMethod,
           items: items.map((i) => ({
             product_id: i.product_id,
             quantity: i.quantity,
@@ -598,6 +600,16 @@ function PointOfSale() {
         <section className="card">
           <h4 className="card-title">الدفع</h4>
           <div className="form-row">
+            <div className="field">
+              <label>طريقه الدفع </label>
+              <select class="form-select" aria-label="Default select example"
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              >
+                <option disabled>-- اختر طريقه الدفع --</option>
+                <option value="cash">كاش</option>
+                <option value="visa">فيزا</option>
+              </select>
+            </div>
             <div className="field">
               <label>المبلغ المدفوع من العميل</label>
               <input
