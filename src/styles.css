@@ -69,6 +69,9 @@
 input{
   min-width: 100px !important;
 }
+.form-check .form-check-input{
+    width:50px !important;
+}
 .modal-header {
     justify-content: space-between;
 }

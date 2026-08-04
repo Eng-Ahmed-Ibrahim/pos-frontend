@@ -26,6 +26,7 @@ import PurchaseReturned from './Pages/Purchases/Purchasereturned';
 import Units from './Pages/Products/Units';
 import WastePage from './Pages/Purchases/Wastepage';
 import FinancialReport from './Pages/Reports/Financialreport';
+import PriceCheck from './Pages/PriceCheck';
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
 
             <Route path="/sales/:id/print" element={<SaleInvoicePrint />} />
           </Route>
+            <Route path="/price-check" element={<PriceCheck />} />
 
         </Route>
       </Routes>

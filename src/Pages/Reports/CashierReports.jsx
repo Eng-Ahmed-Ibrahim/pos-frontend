@@ -148,7 +148,7 @@ function CashierReports() {
                             marginBottom: "8px",
                         }}
                     >
-                        إجمالي المبيعات
+                        إجمالي المبيعات 
                     </div>
 
                     <div

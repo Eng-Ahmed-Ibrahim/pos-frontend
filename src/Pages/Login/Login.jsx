@@ -13,7 +13,7 @@ function Login() {
     const [submitLoading, setSubmitLoading] = useState(false)
 
     const { setAuthData } = useAuth();
-    
+
     const navigate = useNavigate();
     const submit = async () => {
         setSubmitLoading(true)
@@ -30,6 +30,7 @@ function Login() {
             if (response.ok) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("name", data.user.name);
+
 
                 setAuthData({
                     user: data.user,
@@ -58,7 +59,10 @@ function Login() {
         <>
             <div className="login d-flex align-items-center w-100 justify-center">
 
-                <div className="login-box" id="loginBox" dir="rtl">
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    submit();
+                }} className="login-box" id="loginBox" dir="rtl">
                     <div className="bubble">تسجيل الدخول</div>
 
                     <div className="bear-container">
@@ -73,10 +77,10 @@ function Login() {
                         <label>كلمة المرور</label>
                         <input onChange={(e) => setPassword(e.target.value)} type="password" id="password" placeholder="كلمة المرور" />
                     </div>
-                    <button disabled={submitLoading} onClick={submit} type="button">
+                    <button disabled={submitLoading} onClick={submit} type="submit">
                         {submitLoading ? "جارى الدخول..." : "تسجيل"}
                     </button>
-                </div>
+                </form>
             </div>
 
         </>

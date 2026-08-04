@@ -9,6 +9,7 @@ import { FaEye } from "react-icons/fa";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 const ADMIN_ROLE_ID = 1;
+const ADMIN_CASHIER_ID = 2;
 
 // Groups a flat permissions array into { sectionName: [perm, perm, ...] }
 const groupPermissionsBySection = (permissions) => {
@@ -296,6 +297,7 @@ function Roles() {
                                     ) : (
                                         roles.map((role, index) => {
                                             const isAdmin = role.id === ADMIN_ROLE_ID;
+                                            const isCashier = role.id === ADMIN_CASHIER_ID;
                                             return (
                                                 <tr key={role.id}>
                                                     <td>{index + 1}</td>
@@ -308,7 +310,7 @@ function Roles() {
                                                         <button className="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#showModal" onClick={() => openShowModal(role)}>
                                                             <FaEye />
                                                         </button>
-                                                        {!isAdmin && (
+                                                        {(!isAdmin ) && (
                                                             <>
                                                                 <button className="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editModal" onClick={() => openEditModal(role)}>
                                                                     <FiEdit2 />
