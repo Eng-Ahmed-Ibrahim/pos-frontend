@@ -43,9 +43,10 @@ function SaleInvoicePrint({ invoiceId }) {
             })
             const json = await res.json()
             console.log(json);
+            console.log(json.status);
 
             if (json.status) {
-                setSale(json.data.sale || json.data)
+                setSale(json.sale || json.data)
             } else {
                 setError('تعذر تحميل بيانات الفاتورة')
             }

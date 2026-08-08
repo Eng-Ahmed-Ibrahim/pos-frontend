@@ -3,12 +3,12 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from './Components/Layout/Layout';
 import Dashboard from './Pages/Dashboard';
 import Products from './Pages/Products/Products';
-import Category from './Pages/Products/Category';
-import SubCategory from './Pages/Products/SubCategory';
-import Suppliers from './Pages/Purchases/Suppliers';
-import CreateInvoice from './Pages/Purchases/CreateInvoice';
-import Invoices from './Pages/Purchases/Invoices';
-import EditInvoice from './Pages/Purchases/EditInvoice';
+import Category from './Pages/Category/Category';
+import SubCategory from './Pages/Subcategory/SubCategory';
+import Suppliers from './Pages/Suppliers/Suppliers';
+import CreateInvoice from './Pages/Purchases/Create';
+import Purchases from './Pages/Purchases/Purchases';
+import EditPurchases from './Pages/Purchases/Edit';
 import PointOfSale from './Pages/PointOfSale/Pointofsale';
 import SaleInvoicePrint from './Pages/PointOfSale/SaleInvoicePrint';
 import Login from './Pages/Login/Login';
@@ -22,9 +22,9 @@ import Reports from './Pages/Reports/Reports';
 import Settings from './Pages/Settings/Settings';
 import WarehouseInventory from './Pages/Reports/WarehouseInventory';
 import CashierReports from './Pages/Reports/CashierReports';
-import PurchaseReturned from './Pages/Purchases/Purchasereturned';
-import Units from './Pages/Products/Units';
-import WastePage from './Pages/Purchases/Wastepage';
+import PurchaseReturned from './Pages/Purchases/Returned';
+import Units from './Pages/Units/Units';
+import WastePage from './Pages/Wastes/Wastepage';
 import FinancialReport from './Pages/Reports/Financialreport';
 import PriceCheck from './Pages/PriceCheck';
 
@@ -46,10 +46,10 @@ function App() {
             <Route path="/categories" element={<Category />} />
             <Route path="/sub-categories" element={<SubCategory />} />
             <Route path="/suppliers" element={<Suppliers />} />
-            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/invoices" element={<Purchases />} />
             <Route path="/invoice/return" element={<PurchaseReturned  />} />
             <Route path="/invoices/create" element={<CreateInvoice />} />
-            <Route path="/invoices/edit/:id" element={<EditInvoice />} />
+            <Route path="/invoices/edit/:id" element={<EditPurchases />} />
             <Route path="/point-of-sales" element={<PointOfSale />} />
             <Route path="/returns" element={<Returned />} />
             <Route path="/users" element={<Users />} />

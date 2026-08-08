@@ -210,7 +210,6 @@ function Roles() {
                 body: JSON.stringify({ name, permissions: selectedPermissions }),
             });
             const json = await res.json();
-
             if (res.status === 422) {
                 setErrors(json.errors || {});
                 return;
@@ -219,7 +218,6 @@ function Roles() {
                 alert(json.message || 'حدث خطأ أثناء التعديل');
                 return;
             }
-
             fetchRoles()
             resetForm();
         } catch (err) {
@@ -310,7 +308,7 @@ function Roles() {
                                                         <button className="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#showModal" onClick={() => openShowModal(role)}>
                                                             <FaEye />
                                                         </button>
-                                                        {(!isAdmin ) && (
+                                                        {(!isAdmin) && (
                                                             <>
                                                                 <button className="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editModal" onClick={() => openEditModal(role)}>
                                                                     <FiEdit2 />

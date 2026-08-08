@@ -1,42 +1,52 @@
 import { useState, useEffect, useRef } from 'react';
-import { MdNotificationsNone, MdFullscreen, MdFullscreenExit, MdAdd } from "react-icons/md";
+import { 
+  MdNotificationsNone, 
+  MdFullscreen, 
+  MdFullscreenExit, 
+  MdAdd, 
+  MdMenu,
+  MdSettings,
+  MdLockOutline,
+  MdLogout,
+  MdKeyboardArrowDown
+} from "react-icons/md";
+import './styles.css';
 import { AiOutlineFileAdd, AiOutlineBarcode } from "react-icons/ai";
-import { CiLogout } from "react-icons/ci"; // أيقونة تسجيل الخروج اللي بتستخدمها
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 
+function Navbar({ onToggleSidebar }) {
+  const { can } = useAuth();
+  const navigate = useNavigate();
 
-function Navbar() {
-  const { can, systemSetting } = useAuth();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false); // الحالة الخاصة بقائمة المستخدم
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const userMenuRef = useRef(null); // مرجع للتحكم بالقائمة عند الضغط خارجها
+  const userMenuRef = useRef(null);
+  const quickMenuRef = useRef(null);
 
   const name = localStorage.getItem("name") || "مسؤول النظام";
   const role = localStorage.getItem("role") || "المدير العام";
 
-  // دالة تسجيل الخروج الخاصة بك
   const logout = () => {
     localStorage.clear();
     window.location.href = "/login";
   };
 
-  // إغلاق القائمة عند الضغط في أي مكان خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
+      }
+      if (quickMenuRef.current && !quickMenuRef.current.contains(event.target)) {
+        setShowQuickMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-
-
-  // وظيفة الـ Full Screen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => {
@@ -50,189 +60,135 @@ function Navbar() {
     }
   };
 
-  const today = new Date().toLocaleDateString('ar-EG', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
   return (
-    <>
-      <div className="topbar d-flex align-items-center justify-content-between"
-        style={{
-          padding: '12px 24px',
-          background: '#ffffff',
-          borderBottom: '1px solid #eef2f5',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-          position: 'relative'
-        }}>
+    <div className="topbar d-flex align-items-center justify-content-between">
+      {/* الجزء الأيمن (زر القائمة للموبايل و البروفايل) */}
+      <div className="topbar-right d-flex align-items-center gap-2 gap-md-3">
+        <button 
+          className="sidebar-toggle-btn d-lg-none" 
+          onClick={onToggleSidebar}
+          aria-label="القائمة"
+        >
+          <MdMenu size={24} />
+        </button>
 
-        {/* الجزء الأيمن */}
-        <div className="topbar-right d-flex align-items-center" style={{ gap: '15px' }}>
-          <div className="user-profile-container" ref={userMenuRef} style={{ position: 'relative' }}>
-            <div className="user-profile-nav"
-              onClick={() => setShowUserMenu(!showUserMenu)} // يفتح ويقفل عند الضغط
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
-              <div className="avatar" style={{
-                width: '36px',
-                height: '36px',
-                background: '#f4f6f8',
-                color: '#8B5E3C',
-                border: '1px solid #e1e8ed',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '700',
-                fontSize: '13px'
-              }}>
+        {/* البروفايل والقائمة المنسدلة */}
+        <div className="user-profile-container" ref={userMenuRef} style={{ position: 'relative' }}>
+          <div 
+            className={`user-profile-nav d-flex align-items-center gap-2 ${showUserMenu ? 'active' : ''}`}
+            onClick={() => setShowUserMenu(!showUserMenu)}
+          >
+            <div className="avatar-wrapper">
+              <div className="avatar">
                 {name.charAt(0).toUpperCase()}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: '#2c3e50', lineHeight: '1.2' }}>{name}</span>
-                <span style={{ fontSize: '11px', color: '#bdc3c7' }}>{role}</span>
-              </div>
+              <span className="status-indicator"></span>
             </div>
 
-            {showUserMenu && (
-              <div className="user-dropdown-menu" style={{
-                position: 'absolute',
-                top: '48px',
-                // left: '-70%',
-                background: '#ffffff',
-                border: '1px solid #eef2f5',
-                borderRadius: '8px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                minWidth: '160px',
-                zIndex: '1000',
-                overflow: 'hidden'
-              }}>
-                <button
-                  onClick={logout}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '12px 16px',
-                    color: '#e74c3c',
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    textAlign: 'right',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = '#fdf2f2'}
-                  onMouseLeave={(e) => e.target.style.background = 'none'}
+            <div className="user-info-text d-none d-sm-flex flex-column text-start">
+              <span className="user-name">{name}</span>
+              <span className="user-role">{role}</span>
+            </div>
+
+            <MdKeyboardArrowDown className={`profile-arrow d-none d-sm-block ${showUserMenu ? 'open' : ''}`} />
+          </div>
+
+          {/* القائمة المنسدلة والأنيقة للبروفايل */}
+          {showUserMenu && (
+            <div className="user-dropdown-card">
+              {/* هيدر القائمة للتأكيد على الموبايل والديسكتوب */}
+              <div className="dropdown-user-header">
+                <div className="avatar lg">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+                <div className="user-details">
+                  <div className="name">{name}</div>
+                  <div className="role">{role}</div>
+                </div>
+              </div>
+
+              <div className="dropdown-divider"></div>
+
+              {/* أزرار التنقل */}
+              <div className="dropdown-menu-list">
+                <button 
+                  onClick={() => { navigate('/settings'); setShowUserMenu(false); }} 
+                  className="dropdown-item-btn"
                 >
-                  <CiLogout style={{ fontSize: '18px', color: '#e74c3c' }} />
-                  تسجيل الخروج
+                  <MdSettings className="item-icon" />
+                  <span>الإعدادات العامة</span>
+                </button>
+
+                <button 
+                  onClick={() => { navigate('/change-password'); setShowUserMenu(false); }} 
+                  className="dropdown-item-btn"
+                >
+                  <MdLockOutline className="item-icon" />
+                  <span>تغيير كلمة المرور</span>
                 </button>
               </div>
-            )}
-          </div>
 
-        </div>
+              <div className="dropdown-divider"></div>
 
-        {/* الجزء الأيسر */}
-        <div className="topbar-actions d-flex align-items-center" style={{ gap: '18px' }}>
-
-          {/* زر الإضافة السريعة */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowQuickMenu(!showQuickMenu)}
-              className=" btn btn-primary"
-              style={{
-
-                padding: '6px 14px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              <MdAdd style={{ fontSize: '18px' }} /> إجراء سريع
-            </button>
-
-            {showQuickMenu && (
-              <div style={{
-                position: 'absolute',
-                top: '40px',
-                left: '0',
-                background: '#fff',
-                border: '1px solid #eee',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                width: '180px',
-                zIndex: '999',
-                overflow: 'hidden'
-              }}>
-                <NavLink to="/invoices/create" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', color: '#333', textDecoration: 'none', fontSize: '13px' }}>
-                  <AiOutlineFileAdd style={{ color: '#8B5E3C' }} /> فاتورة جديدة
-                </NavLink>
-                <NavLink to="/products" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', color: '#333', textDecoration: 'none', fontSize: '13px', borderTop: '1px solid #f5f5f5' }}>
-                  <AiOutlineBarcode style={{ color: '#8B5E3C' }} /> إضافة منتج
-                </NavLink>
+              {/* زر تسجيل الخروج */}
+              <div className="dropdown-menu-list">
+                <button onClick={logout} className="dropdown-item-btn logout-btn">
+                  <MdLogout className="item-icon logout-icon" />
+                  <span>تسجيل الخروج</span>
+                </button>
               </div>
-            )}
-          </div>
-
-          {can('point_of_sale.view') && (
-            <NavLink to="/point-of-sales"
-              className=" btn btn-primary"
-              style={{
-
-                padding: '6px 14px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              نقطة البيع
-            </NavLink>
+            </div>
           )}
-
-          {/* زر ملء الشاشة */}
-          <button
-            onClick={toggleFullscreen}
-            style={{ background: 'none', border: 'none', fontSize: '26px', cursor: 'pointer', color: '#5a6c7d', display: 'flex', alignItems: 'center' }}
-            title={isFullscreen ? "الخروج من ملء الشاشة" : "عرض بملء الشاشة"}
-          >
-            {isFullscreen ? <MdFullscreenExit /> : <MdFullscreen />}
-          </button>
-
-          {/* أيقونة الإشعارات */}
-          <div className="notification-icon" style={{ position: 'relative', fontSize: '24px', cursor: 'pointer', color: '#5a6c7d', display: 'flex', alignItems: 'center' }}>
-            <MdNotificationsNone />
-            <span style={{
-              position: 'absolute',
-              top: '2px',
-              right: '2px',
-              width: '8px',
-              height: '8px',
-              background: '#e74c3c',
-              borderRadius: '50%'
-            }}></span>
-          </div>
-
-          <div style={{ width: '1px', height: '24px', background: '#e0e0e0' }}></div>
-
-
-
         </div>
       </div>
 
-      <style>{`
-        @keyframes blinker {
-          50% { opacity: 0.4; }
-        }
-        .blink {
-          animation: blinker 1.5s linear infinite;
-        }
-      `}</style>
-    </>
+      {/* الجزء الأيسر (الإجراءات السريعة والإشعارات) */}
+      <div className="topbar-actions d-flex align-items-center gap-2 gap-md-3">
+        {/* إجراء سريع */}
+        <div style={{ position: 'relative' }} ref={quickMenuRef}>
+          <button
+            onClick={() => setShowQuickMenu(!showQuickMenu)}
+            className="btn btn-primary action-btn"
+          >
+            <MdAdd style={{ fontSize: '18px' }} /> 
+            <span className="d-none d-sm-inline">إجراء سريع</span>
+          </button>
+
+          {showQuickMenu && (
+            <div className="quick-dropdown-menu">
+              <NavLink to="/invoices/create" onClick={() => setShowQuickMenu(false)} className="quick-item">
+                <AiOutlineFileAdd style={{ color: '#8B5E3C' }} /> فاتورة جديدة
+              </NavLink>
+              <NavLink to="/products" onClick={() => setShowQuickMenu(false)} className="quick-item border-top">
+                <AiOutlineBarcode style={{ color: '#8B5E3C' }} /> إضافة منتج
+              </NavLink>
+            </div>
+          )}
+        </div>
+
+        {/* نقطة البيع */}
+        {can('point_of_sale.view') && (
+          <NavLink to="/point-of-sales" className="btn btn-primary action-btn">
+            نقطة البيع
+          </NavLink>
+        )}
+
+        {/* ملء الشاشة */}
+        <button
+          onClick={toggleFullscreen}
+          className="icon-btn d-none d-sm-flex"
+          title={isFullscreen ? "الخروج من ملء الشاشة" : "عرض بملء الشاشة"}
+        >
+          {isFullscreen ? <MdFullscreenExit /> : <MdFullscreen />}
+        </button>
+
+        {/* الإشعارات */}
+        <div className="notification-icon icon-btn">
+          <MdNotificationsNone />
+          <span className="notification-badge"></span>
+        </div>
+      </div>
+    </div>
   );
 }
 
