@@ -96,7 +96,7 @@ function Purchases() {
                     <td><NavLink to={`/invoices/edit/${purchase.id}`}>#{purchase.id}</NavLink></td>
                     <td>{purchase.supplier?.name}</td>
                     <td>{purchase.items_count}</td>
-                    <td>{purchase.total}</td>
+                    <td>{purchase.items_sum_total}</td>
                     <td>
                       <a
                         href={`${SERVER_BASE}/${purchase.image}`}

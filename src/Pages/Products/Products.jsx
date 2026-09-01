@@ -265,7 +265,7 @@ function Products() {
                                         <tr key={prod.id}>
                                             <td>{index + 1}</td>
                                             <td>{prod.name}</td>
-                                            <td>{prod.unit.name}</td>
+                                            <td>{prod.unit?.name}</td>
                                             <td>
                                                 <Barcode
                                                     value={prod.barcode}
@@ -304,7 +304,7 @@ function Products() {
                         </table>
                     </div>
 
-                    {/* PAGINATION COMPONENT */}
+                    {/* PAGINATION COMPONENT  */}
                     <Pagination
                         currentPage={page}
                         lastPage={lastPage}

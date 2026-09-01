@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import { useParams, useNavigate } from "react-router-dom";
 import { apiFetch } from "@/Components/apiFetch";
 import Swal from "sweetalert2";
+import Pagination from "../../Components/Pagination";
 
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -56,10 +57,13 @@ function Edit() {
         price: '',
         stock: '',
         minimum_stock: '',
-        remaining_stock:0,
-        total_sold:0,
-        unit_name:''
+        remaining_stock: 0,
+        total_sold: 0,
+        unit_name: ''
     })
+
+    const [page, setPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
 
     const [submitting, setSubmitting] = useState(false)
 
@@ -122,9 +126,9 @@ function Edit() {
         }
     }
 
-    const fetchPurchase = async () => {
+    const fetchPurchase = async (pageNum = 1) => {
         try {
-            const res = await apiFetch(`purchases/${id}`, { method: "GET" })
+            const res = await apiFetch(`purchases/${id}?page=${pageNum}`, { method: "GET" })
             const json = await res.json()
             if (json.status) {
                 const purchase = json.purchase
@@ -133,7 +137,7 @@ function Edit() {
                 setInvoiceNumber(purchase.notes || '')
                 setExistingImage(purchase.image || null)
 
-                const mappedItems = (purchase.items || []).map((it) => {
+                const mappedItems = (json.items.data || []).map((it) => {
                     const qty = Number(it.quantity) || 0
                     const price = Number(it.price) || 0
                     return {
@@ -144,12 +148,14 @@ function Edit() {
                         price: price,
                         expire_date: it.expire_date ? String(it.expire_date).slice(0, 10) : '',
                         subtotal: qty * price,
-                        remaining_stock:it.remaining_stock || 0,
-                        total_sold:it.total_sold,
-                        unit_name:it.product?.unit?.name
+                        remaining_stock: it.remaining_stock || 0,
+                        total_sold: it.total_sold,
+                        unit_name: it.product?.unit?.name
                     }
                 })
                 setItems(mappedItems)
+                setPage(json.pagination.current_page)
+                setLastPage(json.pagination.last_page)
             } else {
                 setError('فشل تحميل بيانات الفاتورة المطلوب تعديلها')
             }
@@ -158,6 +164,10 @@ function Edit() {
         }
     }
 
+    const handlePageChange = (newPage) => {
+        setLoading(true)
+        fetchPurchase(newPage).finally(() => setLoading(false))
+    }
     const noResultsFound =
         searchTerm.trim() !== '' && !selectedProduct && filteredProducts.length === 0 && !showNewProductForm
 
@@ -213,13 +223,13 @@ function Edit() {
                     price: priceNum,
                     expire_date: expireDate,
                     subtotal: newQty * priceNum,
-                    
+
                 }
                 // نقل العنصر المُحدث لأعلى القائمة إذا كنت تفضل ذلك، أو تركه في مكانه
                 return updated
             }
-            console.log("prodcut " ,product);
-            
+            console.log("prodcut ", product);
+
             // إضافة الصنف الجديد تماماً في أول المصفوفة هنا [عنصر جديد، ...العناصر القديمة]
             return [
                 {
@@ -230,7 +240,7 @@ function Edit() {
                     price: priceNum,
                     expire_date: expireDate,
                     subtotal: quantityNum * priceNum,
-                    unit_name : product.unit_name
+                    unit_name: product.unit_name
                 },
                 ...prev,
             ]
@@ -311,7 +321,7 @@ function Edit() {
             purchase_price: '',
             stock: '',
             minimum_stock: '',
-            unitId:''
+            unitId: ''
         })
     }
 
@@ -798,7 +808,7 @@ function Edit() {
                                             type="number"
                                             min="1"
                                             value={i.quantity}
-                                            style={{width:"100px"}}
+                                            style={{ width: "100px" }}
                                             onChange={(e) => handleUpdateItem(i.product_id, 'quantity', e.target.value)}
                                             className="table-input"
                                         />
@@ -807,19 +817,19 @@ function Edit() {
                                         <input
                                             type="number"
                                             min="1"
-                                            style={{width:"100px"}}
+                                            style={{ width: "100px" }}
                                             value={i.remaining_stock}
                                             readOnly
                                             className="table-input"
                                         />
                                     </td>
-                      
+
                                     <td>
                                         <input
                                             type="number"
                                             min="0"
                                             step="0.01"
-                                            style={{width:"100px"}}
+                                            style={{ width: "100px" }}
                                             value={i.price}
                                             onChange={(e) => handleUpdateItem(i.product_id, 'price', e.target.value)}
                                             className="table-input"
@@ -829,19 +839,19 @@ function Edit() {
                                         <input
                                             type="date"
                                             value={i.expire_date || ''}
-                                            style={{width:"100px"}}
+                                            style={{ width: "100px" }}
                                             onChange={(e) => handleUpdateItemDate(i.product_id, e.target.value)}
                                             className="table-input"
                                         />
                                     </td>
                                     <td className="bold">{i.subtotal.toFixed(2)}</td>
                                     <td>
-                                        {(i.quantity -i.remaining_stock) == 0 ?(
+                                        {(i.quantity - i.remaining_stock) == 0 ? (
 
                                             <button type="button" className="btn btn-danger-text" onClick={() => handleRemoveItem(i.product_id)}>
-                                            حذف
-                                        </button>
-                                        ):
+                                                حذف
+                                            </button>
+                                        ) :
                                             ""
                                         }
                                     </td>
@@ -860,12 +870,18 @@ function Edit() {
                     </table>
                 )}
             </section>
+            {/* PAGINATION COMPONENT  */}
+            <Pagination
+                currentPage={page}
+                lastPage={lastPage}
+                onPageChange={handlePageChange}
+            />
 
-            <div className="submit-bar">
+            {/* <div className="submit-bar">
                 <button type="button" className="w-100 text-center  btn btn-primary btn-large d-flex align-items-center justifiy-content-center" disabled={submitting} onClick={handleSubmitPurchase}>
                     {submitting ? 'جارٍ حفظ التعديلات...' : 'حفظ التعديلات'}
                 </button>
-            </div>
+            </div> */}
         </div>
     )
 }
