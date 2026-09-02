@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
       const res = await apiFetch("user");
       const json = await res.json();
 
-
+      console.log(json.roles[0]);
       setAuthData(json);
     } catch (err) {
       setUser(null);

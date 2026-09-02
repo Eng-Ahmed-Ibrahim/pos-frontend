@@ -28,8 +28,10 @@ function Returned() {
     try {
       const res = await apiFetch(`sales/${id}`)
       const json = await res.json()
+      console.log(json.sale);
+      
       if (res.ok && json.status) {
-        setSale(json.data.sale)
+        setSale(json.sale)
       } else {
         setError(json.message || 'لم يتم العثور على فاتورة بهذا الرقم')
       }

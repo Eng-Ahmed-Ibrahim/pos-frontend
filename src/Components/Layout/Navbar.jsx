@@ -110,7 +110,7 @@ function Navbar({ onToggleSidebar }) {
               <div className="dropdown-divider"></div>
 
               {/* أزرار التنقل */}
-              <div className="dropdown-menu-list">
+              {/* <div className="dropdown-menu-list">
                 <button 
                   onClick={() => { navigate('/settings'); setShowUserMenu(false); }} 
                   className="dropdown-item-btn"
@@ -126,7 +126,7 @@ function Navbar({ onToggleSidebar }) {
                   <MdLockOutline className="item-icon" />
                   <span>تغيير كلمة المرور</span>
                 </button>
-              </div>
+              </div> */}
 
               <div className="dropdown-divider"></div>
 
@@ -145,7 +145,7 @@ function Navbar({ onToggleSidebar }) {
       {/* الجزء الأيسر (الإجراءات السريعة والإشعارات) */}
       <div className="topbar-actions d-flex align-items-center gap-2 gap-md-3">
         {/* إجراء سريع */}
-        <div style={{ position: 'relative' }} ref={quickMenuRef}>
+        {/* <div style={{ position: 'relative' }} ref={quickMenuRef}>
           <button
             onClick={() => setShowQuickMenu(!showQuickMenu)}
             className="btn btn-primary action-btn"
@@ -164,7 +164,7 @@ function Navbar({ onToggleSidebar }) {
               </NavLink>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* نقطة البيع */}
         {can('point_of_sale.view') && (

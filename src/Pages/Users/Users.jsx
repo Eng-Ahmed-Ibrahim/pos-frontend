@@ -14,7 +14,7 @@ function Users() {
     // form fields
     const [editId, setEditId] = useState(null);
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState(''); // single role per user
@@ -27,7 +27,7 @@ function Users() {
     const resetForm = () => {
         setEditId(null);
         setName('');
-        setEmail('');
+        setUsername('');
         setPassword('');
         setConfirmPassword('');
         setRole('');
@@ -63,7 +63,7 @@ function Users() {
         resetForm();
         setEditId(user.id);
         setName(user.name);
-        setEmail(user.email);
+        setUsername(user.username);
         setRole(user.roles?.[0]?.name || '');
 
     };
@@ -76,7 +76,7 @@ function Users() {
     const validateClientSide = (isEdit) => {
         const newErrors = {};
         if (!name.trim()) newErrors.name = 'الاسم مطلوب';
-        if (!email.trim()) newErrors.email = 'البريد الالكتروني مطلوب';
+        if (!username.trim()) newErrors.username = 'المستخدم  مطلوب';
         if (!role) newErrors.role = 'الصلاحية مطلوبة';
 
         if (!isEdit && !password) newErrors.password = 'كلمة المرور مطلوبة';
@@ -95,7 +95,7 @@ function Users() {
             const res = await apiFetch('users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password, role }),
+                body: JSON.stringify({ name, username, password, role }),
             });
             const json = await res.json();
 
@@ -124,7 +124,7 @@ function Users() {
 
         setSubmitLoading(true);
         try {
-            const body = { name, email, role };
+            const body = { name, username, role };
             if (password) body.password = password;
 
             const res = await apiFetch(`users/${editId}`, {
@@ -208,7 +208,7 @@ function Users() {
                                     <tr>
                                         <th>#</th>
                                         <th>الاسم</th>
-                                        <th>البريد الالكتروني</th>
+                                        <th>المستخدم</th>
                                         <th>الصلاحية</th>
                                         <th>الإجراءات</th>
                                     </tr>
@@ -223,7 +223,7 @@ function Users() {
                                             <tr key={user.id}>
                                                 <td>{index + 1}</td>
                                                 <td>{user.name}</td>
-                                                <td>{user.email}</td>
+                                                <td>{user.username}</td>
                                                 <td>
                                                     {user.roles?.[0] && (
                                                         <span className="badge bg-primary">{user.roles[0].name}</span>
@@ -265,8 +265,8 @@ function Users() {
                                     {fieldError('name')}
                                 </div>
                                 <div className="col">
-                                    <input type="email" placeholder='البريد الالكتروني' autoComplete="new-email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                    {fieldError('email')}
+                                    <input type="text" placeholder="المستخدم" autoComplete="new-username" className="form-control" value={username} onChange={(e) => setUsername(e.target.value)} />
+                                    {fieldError('username')}
                                 </div>
                             </div>
                             <div className="row g-3 mt-2">
@@ -314,8 +314,8 @@ function Users() {
                                     {fieldError('name')}
                                 </div>
                                 <div className="col">
-                                    <input type="email" placeholder='البريد الالكتروني' autoComplete="new-email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                    {fieldError('email')}
+                                    <input type="text" placeholder="المستخدم" autoComplete="new-username" className="form-control" value={username} onChange={(e) => setUsername(e.target.value)} />
+                                    {fieldError('username')}
                                 </div>
                             </div>
                             <div className="row g-3 mt-2">
@@ -365,7 +365,7 @@ function Users() {
                                     </li>
                                     <li className="list-group-item d-flex justify-content-between">
                                         <span className="fw-bold">البريد الالكتروني</span>
-                                        <span>{showUser.email}</span>
+                                        <span>{showUser.username}</span>
                                     </li>
                                     <li className="list-group-item d-flex justify-content-between">
                                         <span className="fw-bold">الصلاحية</span>

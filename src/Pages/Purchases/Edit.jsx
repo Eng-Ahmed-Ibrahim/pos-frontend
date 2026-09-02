@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { apiFetch } from "@/Components/apiFetch";
 import Swal from "sweetalert2";
 import Pagination from "../../Components/Pagination";
+import { useAuth } from "@/context/AuthContext";
 
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -28,6 +29,7 @@ function Edit() {
     const [invoiceNumber, setInvoiceNumber] = useState('')
     const [image, setImage] = useState(null)
     const [existingImage, setExistingImage] = useState(null)
+    const { can } = useAuth();
 
     // ---------- أصناف الفاتورة ----------
     const [items, setItems] = useState([])
@@ -794,7 +796,9 @@ function Edit() {
                                 <th>سعر الشراء</th>
                                 <th>تاريخ الصلاحية</th>
                                 <th>الإجمالي</th>
+                                {can('invoices.delete_purchase_item')&&(
                                 <th></th>
+                                )}
                             </tr>
                         </thead>
                         <tbody>
@@ -845,9 +849,11 @@ function Edit() {
                                         />
                                     </td>
                                     <td className="bold">{i.subtotal.toFixed(2)}</td>
-                                    <td>
-                                        {(i.quantity - i.remaining_stock) == 0 ? (
+                                    {can('invoices.delete_purchase_item')&&(
 
+                                        <td> 
+                                        {(i.quantity - i.remaining_stock) == 0 ? (
+                                            
                                             <button type="button" className="btn btn-danger-text" onClick={() => handleRemoveItem(i.product_id)}>
                                                 حذف
                                             </button>
@@ -855,6 +861,7 @@ function Edit() {
                                             ""
                                         }
                                     </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

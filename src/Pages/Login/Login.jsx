@@ -8,7 +8,7 @@ import { apiFetch } from "@/Components/apiFetch";
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function Login() {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [submitLoading, setSubmitLoading] = useState(false)
 
@@ -19,7 +19,7 @@ function Login() {
         setSubmitLoading(true)
         try {
             const formData = new FormData();
-            formData.append("email", email);
+            formData.append("username", username);
             formData.append("password", password);
             const response = await apiFetch(`login`, {
                 method: "POST",
@@ -37,6 +37,8 @@ function Login() {
                     roles: data.roles,
                     permissions: data.permissions,
                 });
+                
+          
                 Swal.fire({ toast: true, position: "top-start", icon: "success", title: "تم تسجيل الدخول بنجاح", showConfirmButton: false, timer: 2000 });
             } else {
                 Swal.fire({
@@ -70,8 +72,8 @@ function Login() {
                     </div>
 
                     <div className="input-group">
-                        <label>البريد الالكتروني</label>
-                        <input onChange={(e) => setEmail(e.target.value)} type="email" id="email" placeholder="البريد الالكتروني" />
+                        <label>المستخدم</label>
+                        <input onChange={(e) => setUsername(e.target.value)} type="text" id="username" placeholder="المستخدم" />
                     </div>
                     <div className="input-group">
                         <label>كلمة المرور</label>
