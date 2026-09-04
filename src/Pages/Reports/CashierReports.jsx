@@ -268,7 +268,7 @@ function CashierReports() {
 
                     <tbody>
                         {sales.map((sale) => (
-                            <tr key={sale.id}>
+                            <tr key={sale.id} className={sale.total==0 ? 'returned' :' '}>
                                 <td>{sale.id}</td>
 
                                 <td>{sale.user?.name ?? "Unknown"}</td>

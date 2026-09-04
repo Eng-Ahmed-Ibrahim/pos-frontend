@@ -27,6 +27,8 @@ import Units from './Pages/Units/Units';
 import WastePage from './Pages/Wastes/Wastepage';
 import FinancialReport from './Pages/Reports/Financialreport';
 import PriceCheck from './Pages/PriceCheck';
+import PermissionRoute from './Components/PermissionRoute';
+import Forbidden from './Components/Forbidden';
 
 function App() {
   return (
@@ -35,6 +37,7 @@ function App() {
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
         </Route>
+        <Route path="/403" element={<Forbidden />} />
 
         {/* public route */}
         {/* protected routes */}
@@ -42,7 +45,9 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="/products" element={<Products />} />
+            <Route  element={<PermissionRoute permission="products.view" />}>
+              <Route  path="/products" element={<Products />} />
+            </Route>
             <Route path="/categories" element={<Category />} />
             <Route path="/sub-categories" element={<SubCategory />} />
             <Route path="/suppliers" element={<Suppliers />} />

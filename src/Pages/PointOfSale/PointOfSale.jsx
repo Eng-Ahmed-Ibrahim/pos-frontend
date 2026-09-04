@@ -378,7 +378,7 @@ function PointOfSale() {
         body: JSON.stringify({
           customer_name: customerName || null,
           amount_paid: amountPaid === '' ? null : Number(amountPaid),
-          payment_method: paymentMethod,
+          payment_method : paymentMethod,
           items: items.map((i) => ({
             product_id: i.product_id,
             quantity: i.quantity,
@@ -399,7 +399,7 @@ function PointOfSale() {
           showConfirmButton: false,
           timer: 3000,
         });
-        console.log("json ", json.invoice_id);
+        console.log("json " ,json.invoice_id);
         setPaymentMethod("cash")
         setInvoiceId(json.invoice_id)
       } else {
@@ -512,14 +512,9 @@ function PointOfSale() {
                     type="number"
                     min="0"
                     step="0.01"
+                    readOnly
                     value={itemPrice}
-                    onChange={(e) => setItemPrice(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleAddItem()
-                      }
-                    }}
+                
                   />
                 </div>
                 <div className="field action-field">
@@ -576,7 +571,7 @@ function PointOfSale() {
                         min="0"
                         step="0.01"
                         value={i.price}
-                        onChange={(e) => handleUpdateItem(i.product_id, 'price', e.target.value)}
+                        readOnly
                         className="table-input"
                       />
                     </td>
@@ -606,7 +601,7 @@ function PointOfSale() {
             <div className="field">
               <label>طريقه الدفع </label>
               <select class="form-select" aria-label="Default select example"
-                value={paymentMethod}
+              value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               >
                 <option disabled>-- اختر طريقه الدفع --</option>
