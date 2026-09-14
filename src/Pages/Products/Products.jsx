@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { FiEdit2, FiTrash2 } from "react-icons/fi";
+// import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -8,7 +8,7 @@ import { apiFetch } from "@/Components/apiFetch";
 import { useAuth } from "@/context/AuthContext";
 import Pagination from "../../Components/Pagination";
 import Barcode from "react-barcode";
-
+import { FiEdit2, FiTrash2, FiPrinter } from "react-icons/fi";
 function Products() {
 
     const [products, setProducts] = useState([]);
@@ -38,7 +38,109 @@ function Products() {
     const [editSubCategoryId, setEditSubCategoryId] = useState('');
     const { can } = useAuth();
     const token = localStorage.getItem("token");
+const printProductSticker = (prod) => {
+    // إنشاء نافذة طباعة جديدة مخفية
+    const printWindow = window.open('', '_blank', 'width=400,height=400');
     
+    // تصميم محتوى الاستيكر ليتناسب مع طابعات الباركود الحرارية الصغيرة
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>طباعة استيكر - ${prod.name}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 5px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                }
+                .sticker {
+                    width: 50mm; /* عرض الاستيكر القياسي، يمكنك تعديله حسب مقاس رول الباركود لديك */
+                    border: 1px solid #000;
+                    padding: 5px;
+                    text-align: center;
+                    box-sizing: border-box;
+                    background: #fff;
+                }
+                .product-name {
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .price-section {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .currency {
+                    font-size: 12px;
+                    margin-right: 3px;
+                }
+                .barcode-container {
+                    margin-top: 5px;
+                }
+                .barcode-container svg {
+                    max-width: 100%;
+                    height: 35px;
+                }
+                .product-id {
+                    font-size: 10px;
+                    margin-top: 2px;
+                }
+                @media print {
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="sticker">
+                <div class="product-name">${prod.name}</div>
+                <div class="price-section">
+                    ${prod.price} <span class="currency">EGP</span>
+                </div>
+                <div class="barcode-container">
+                    <!-- توليد باركود نصي أو رقمي مطابق للـ bar code الخاص بالمنتج -->
+                    <svg id="barcode"></svg>
+                </div>
+                <div class="product-id">${prod.barcode || ''}</div>
+            </div>
+
+            <!-- استدعاء مكتبة JsBarcode لطباعة الباركود كرسم داخل النافذة -->
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+            <script>
+                window.onload = function() {
+                    try {
+                        JsBarcode("#barcode", "${prod.barcode}", {
+                            format: "CODE128",
+                            width: 1.2,
+                            height: 30,
+                            displayValue: false
+                        });
+                    } catch(e) {
+                        console.log(e);
+                    }
+                    window.print();
+                    window.close();
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+};
     const fetchProducts = async (pageNumber = 1) => {
         try {
             setLoading(true);
@@ -281,21 +383,32 @@ function Products() {
                                             <td>{prod.category?.name}</td>
                                             <td>{prod.sub_category?.name || "لا يوجد"}</td>
                                             <td>
-                                                {can('products.edit') &&
-                                                    (<button className="btn btn-ghost btn-sm btn-icon me-1" onClick={() => openEditModal(prod)} data-bs-toggle="modal" data-bs-target="#editModal" >
+                                                {can('products.edit') && (
+                                                    <button className="btn btn-ghost btn-sm btn-icon me-1" onClick={() => openEditModal(prod)} data-bs-toggle="modal" data-bs-target="#editModal">
                                                         <FiEdit2 />
                                                     </button>
-                                                    )}
-                                                {can('products.delete') &&
-                                                    (<button className="btn btn-danger btn-sm btn-icon mx-2" onClick={() => deleteProduct(prod.id)} >
-                                                        <FiTrash2 /> </button>
-                                                    )}
+                                                )}
+
+                                                {/* زر طباعة الاستيكر */}
+                                                <button
+                                                    className="btn btn-outline-secondary btn-sm btn-icon me-1"
+                                                    onClick={() => printProductSticker(prod)}
+                                                    title="طباعة الاستيكر"
+                                                >
+                                                    <FiPrinter />
+                                                </button>
+
+                                                {can('products.delete') && (
+                                                    <button className="btn btn-danger btn-sm btn-icon mx-2" onClick={() => deleteProduct(prod.id)}>
+                                                        <FiTrash2 />
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" style={{ textAlign: "center", padding: "2rem" }}>
+                                        <td colSpan="10" style={{ textAlign: "center", padding: "2rem" }}>
                                             لا يوجد منتجات
                                         </td>
                                     </tr>
@@ -328,7 +441,7 @@ function Products() {
                                 </div>
                                 <div className="col-6">
                                     <label className="form-label">باركود</label>
-                                    <input value={barcodeNumber} onChange={(e) => setBarcodeNumber(e.target.value)} type="number" className="form-control" placeholder="باركود" />
+                                    <input value={barcodeNumber} onChange={(e) => setBarcodeNumber(e.target.value)} type="text" className="form-control" placeholder="باركود" />
                                 </div>
                                 <div className="col-12">
                                     <label className="form-label">الوحده</label>
@@ -392,7 +505,7 @@ function Products() {
                                 </div>
                                 <div className="col-6">
                                     <label className="form-label">باركود</label>
-                                    <input value={editBarcodeNumber} onChange={(e) => setEditBarcodeNumber(e.target.value)} type="number" className="form-control" placeholder="باركود" />
+                                    <input value={editBarcodeNumber} onChange={(e) => setEditBarcodeNumber(e.target.value)} type="text" className="form-control" placeholder="باركود" />
                                 </div>
                                 <div className="col-12">
                                     <label className="form-label">الوحده</label>

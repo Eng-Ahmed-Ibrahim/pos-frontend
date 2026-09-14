@@ -64,10 +64,9 @@ function Sidebar({ isOpen, onClose }) {
           )}
 
           <div className="nav-section">
-            {(can('point_of_sale.view') || can('point_of_sale.return')) && (
+            {( can('point_of_sale.view') || can('point_of_sale.return') ) && (
               <>
                 <div className="nav-label">المبيعات</div>
-                {can('point_of_sale.view') && (
                   <div className="nav-group">
                     <button
                       type="button"
@@ -96,7 +95,6 @@ function Sidebar({ isOpen, onClose }) {
                       </div>
                     </div>
                   </div>
-                )}
               </>
             )}
 
@@ -118,6 +116,12 @@ function Sidebar({ isOpen, onClose }) {
                       <NavLink to="/invoices" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
                         فواتير
+                      </NavLink>
+                    )}
+                    {can('invoices.view') && (
+                      <NavLink to="/bonus-page?type=bonus" onClick={onClose} className="nav-item nav-sub-item">
+                        <span className="icon"><FaLeftLong /></span>
+                        البونص
                       </NavLink>
                     )}
                     {can('suppliers.view') && (
@@ -196,10 +200,13 @@ function Sidebar({ isOpen, onClose }) {
                   المنتجات
                 </NavLink>
               )}
-              <NavLink to="/units" onClick={onClose} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+              {can('view.units') && (
+
+                <NavLink to="/units" onClick={onClose} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                 <span className="icon"><MdInventory /></span>
                 الوحدات
               </NavLink>
+              )}
               {can('categories.view') && (
                 <NavLink to="/categories" onClick={onClose} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                   <span className="icon"><MdCategory /></span>

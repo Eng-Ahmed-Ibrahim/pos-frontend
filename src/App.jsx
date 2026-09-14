@@ -27,8 +27,7 @@ import Units from './Pages/Units/Units';
 import WastePage from './Pages/Wastes/Wastepage';
 import FinancialReport from './Pages/Reports/Financialreport';
 import PriceCheck from './Pages/PriceCheck';
-import PermissionRoute from './Components/PermissionRoute';
-import Forbidden from './Components/Forbidden';
+import Bonus from './Pages/Purchases/Bonus';
 
 function App() {
   return (
@@ -37,7 +36,6 @@ function App() {
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
         </Route>
-        <Route path="/403" element={<Forbidden />} />
 
         {/* public route */}
         {/* protected routes */}
@@ -45,12 +43,12 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route  element={<PermissionRoute permission="products.view" />}>
-              <Route  path="/products" element={<Products />} />
-            </Route>
+            <Route path="/products" element={<Products />} />
             <Route path="/categories" element={<Category />} />
             <Route path="/sub-categories" element={<SubCategory />} />
             <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/bonus-page" element={<Purchases />} />
+            <Route path="/create-bonus" element={<Bonus />} />
             <Route path="/invoices" element={<Purchases />} />
             <Route path="/invoice/return" element={<PurchaseReturned  />} />
             <Route path="/invoices/create" element={<CreateInvoice />} />

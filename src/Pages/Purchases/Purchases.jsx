@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useSearchParams, useLocation } from 'react-router-dom'
 import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
@@ -12,16 +12,18 @@ function Purchases() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
   const { can } = useAuth();
-
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get('type'); 
   const token = localStorage.getItem("token");
+  const location = useLocation(); // تتبع مسار وتغييرات الـ URL
   useEffect(() => {
     fetchPurchases()
-  }, [])
+  }, [location.search])
   const fetchPurchases = async () => {
 
     try {
       setLoading(true)
-      const response = await apiFetch(`purchases`, {
+      const response = await apiFetch(`purchases?type=${type || ''}`, {
         method: "GET",
       }
       );
@@ -65,7 +67,7 @@ function Purchases() {
     <>
 
       {can('invoices.create') && (
-        <NavLink to="/invoices/create" className="mb-2 btn btn-primary" >
+        <NavLink to={type=="bonus"? "/create-bonus":"/invoices/create"} className="mb-2 btn btn-primary" >
           اضافه فاتوره
         </NavLink>
       )}

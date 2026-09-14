@@ -6,7 +6,7 @@ import Select from 'react-select';
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
 const API_BASE = import.meta.env.VITE_API_URL;
 
-function Create() {
+function Bonus() {
   const addSound = new Audio('/beep.mp3');
   const token = localStorage.getItem("token");
 
@@ -180,9 +180,9 @@ function Create() {
         const newQty = updated[existingIndex].quantity + quantityNum
         updated[existingIndex] = {
           quantity: newQty,
-          price: priceNum,
+          price: 0,
           expire_date: expireDate,
-          subtotal: newQty * priceNum,
+          subtotal: newQty * 0,
           ...updated[existingIndex],
         }
         return updated
@@ -194,9 +194,9 @@ function Create() {
           barcode: product.barcode,
           unit_name: product.unit_name,
           quantity: quantityNum,
-          price: priceNum,
+          price: 0,
           expire_date: expireDate,
-          subtotal: quantityNum * priceNum,
+          subtotal: quantityNum * 0,
         },
         ...prev
 
@@ -436,6 +436,7 @@ function Create() {
       const formData = new FormData();
       formData.append('supplier_id', supplierId);
       formData.append('date', purchaseDate);
+      formData.append('type', 'bonus');
       formData.append('invoice_number', invoiceNumber || '');
 
       if (image) {
@@ -604,7 +605,7 @@ function Create() {
                   }}
                 />
               </div>
-              <div className="field small">
+              {/* <div className="field small">
                 <label>سعر الشراء</label>
                 <input
                   type="text"
@@ -617,7 +618,7 @@ function Create() {
                     }
                   }}
                 />
-              </div>
+              </div> */}
               <div className="field small">
                 <label> تاريخ الصلاحيه </label>
                 <input
@@ -749,7 +750,7 @@ function Create() {
                 <th>الباركود</th>
                 <th>الوحده</th>
                 <th>الكمية</th>
-                <th>سعر الشراء</th>
+                {/* <th>سعر الشراء</th> */}
                 <th>تاريخ الصلاحيه</th>
                 <th>الإجمالي</th>
                 <th></th>
@@ -770,14 +771,14 @@ function Create() {
                       className="table-input"
                     />
                   </td>
-                  <td>
+                  {/* <td>
                     <input
                       type="text"
                       // value={i.price}
                       onChange={(e) => handleUpdateItem(i.product_id, 'price', e.target.value)}
                       className="table-input"
                     />
-                  </td>
+                  </td> */}
                   <td>
                     <input
                       type="date"
@@ -815,4 +816,4 @@ function Create() {
   )
 }
 
-export default Create;
+export default Bonus;

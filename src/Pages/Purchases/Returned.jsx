@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
 import { apiFetch } from "@/Components/apiFetch";
-
+import Select from 'react-select';
 // Debounce بسيط للبحث عشان منضربش API مع كل حرف
 function useDebouncedValue(value, delay = 400) {
   const [debounced, setDebounced] = useState(value)
@@ -243,14 +243,20 @@ function Returned() {
 
       <div className="form-panel card-spacer" style={{ maxWidth: 'none' }}>
         <div className="search-row" style={{ flexWrap: 'wrap', gap: 12 }}>
+
           <div className="form-group">
             <label>المورد</label>
-            <select value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setSelected({}) }}>
-              <option value="">-- اختر المورد --</option>
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+            <Select
+              value={suppliers.find(s => s.id == supplierId) ? { value: supplierId, label: suppliers.find(s => s.id == supplierId).name } : null}
+              onChange={(selectedOption) => {
+                setSupplierId(selectedOption ? selectedOption.value : "");
+                setSelected({})
+              }}
+              options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
+              placeholder="-- اختر أو ابحث عن المورد --"
+              isSearchable={true}
+              noOptionsMatchesMessage={() => "لا يوجد نتائج مطابقة"}
+            />
           </div>
 
           <div className="form-group">
