@@ -170,7 +170,7 @@ function Sidebar({ isOpen, onClose }) {
                     {can('reports.view_sales_cashier') && (
                       <NavLink to="/cashier-reports" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
-                        تقرير مبيعات الكاشير
+                        تقرير مبيعات 
                       </NavLink>
                     )}
                     {can('reports.view_warehouse_inventory') && (
@@ -183,6 +183,12 @@ function Sidebar({ isOpen, onClose }) {
                       <NavLink to="/financial" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
                         الماليات
+                      </NavLink>
+                    )} 
+                    {can('reports.purchases_returns.view') && (
+                      <NavLink to="/reports/purchases-returns" onClick={onClose} className="nav-item nav-sub-item">
+                        <span className="icon"><FaLeftLong /></span>
+                        تقارير مرتجعات 
                       </NavLink>
                     )}
                   </div>

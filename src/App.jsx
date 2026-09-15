@@ -28,6 +28,7 @@ import WastePage from './Pages/Wastes/Wastepage';
 import FinancialReport from './Pages/Reports/Financialreport';
 import PriceCheck from './Pages/PriceCheck';
 import Bonus from './Pages/Purchases/Bonus';
+import PurchaseReturnsReport from './Pages/Reports/PurchaseReturnsReport';
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
             <Route path="/waste" element={<WastePage />} />
             <Route path="/financial" element={<FinancialReport />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/report/purchases-returns" element={<PurchaseReturnsReport />} />
             <Route path="/warehouse-inventory" element={<WarehouseInventory />} />
             <Route path="/cashier-reports" element={<CashierReports />} />
             <Route path="/settings" element={<Settings />} />

@@ -39,7 +39,7 @@ function CashierReports() {
 
     return (
         <div className="container py-4">
-            <h3 className="mb-3"> تقارير مبيعات الكاشير</h3>
+            <h3 className="mb-3"> تقارير مبيعات </h3>
             <div className="row mb-4">
 
                 <div className="col-lg-4 col-md-6 mb-3">

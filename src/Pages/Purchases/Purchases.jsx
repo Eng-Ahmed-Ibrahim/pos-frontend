@@ -1,41 +1,63 @@
-import { useEffect, useState } from 'react'
-import { NavLink, useSearchParams, useLocation } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { NavLink, useSearchParams, useLocation } from "react-router-dom";
+import Select from "react-select";
 import Swal from "sweetalert2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { ThreeDot } from "react-loading-indicators";
 import { apiFetch } from "@/Components/apiFetch";
 import { useAuth } from "@/context/AuthContext";
 
-const SERVER_BASE = import.meta.env.VITE_SERVER_BASE
+const SERVER_BASE = import.meta.env.VITE_SERVER_BASE;
+
 function Purchases() {
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0); // حالة إجمالي المبالغ
   const [loading, setLoading] = useState(false);
   const { can } = useAuth();
   const [searchParams] = useSearchParams();
-  const type = searchParams.get('type'); 
-  const token = localStorage.getItem("token");
-  const location = useLocation(); // تتبع مسار وتغييرات الـ URL
-  useEffect(() => {
-    fetchPurchases()
-  }, [location.search])
-  const fetchPurchases = async () => {
+  const type = searchParams.get('type') || 'normal'; 
+  const location = useLocation();
 
+  const today = new Date().toISOString().split("T")[0];
+
+  const [filters, setFilters] = useState({
+    supplier_id: "",
+    from: today,
+    to: today,   
+  });
+
+  useEffect(() => {
+    fetchPurchases();
+  }, [location.search]);
+
+  const fetchPurchases = async () => {
     try {
-      setLoading(true)
-      const response = await apiFetch(`purchases?type=${type || ''}`, {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        type: type,
+        supplier_id: filters.supplier_id,
+        from: filters.from,
+        to: filters.to,
+      }).toString();
+
+      const response = await apiFetch(`purchases?${queryParams}`, {
         method: "GET",
-      }
-      );
-      const data = await response.json()
+      });
+      const data = await response.json();
+      
       setPurchases(data.purchases);
+      setTotalAmount(data.total_amount || 0); // استقبال الإجمالي من الـ API
+      if (data.suppliers) {
+        setSuppliers(data.suppliers);
+      }
     } catch (err) {
       console.error(err);
-      setError('حدث خطأ أثناء حفظ التعديلات');
     } finally {
       setLoading(false);
     }
-  }
+  };
+
   const deletePurchaseduct = async (id) => {
     const result = await Swal.fire({
       title: "هل أنت متأكد؟",
@@ -46,6 +68,7 @@ function Purchases() {
       cancelButtonText: "إلغاء",
     });
     if (!result.isConfirmed) return;
+
     const formData = new FormData();
     formData.append("_method", "DELETE");
     const response = await apiFetch(`purchases/${id}`, {
@@ -55,22 +78,101 @@ function Purchases() {
 
     if (response.ok) {
       Swal.fire({ toast: true, position: "top-start", icon: "success", title: "تم الحذف بنجاح", showConfirmButton: false, timer: 2000 });
-      fetchPurchases(); // ✅ الاسم الصح
-
+      fetchPurchases();
     } else {
       Swal.fire({ toast: true, position: "top-start", icon: "error", title: "حدث خطأ أثناء الحذف", timer: 3000, showConfirmButton: false });
     }
-
-  }
+  };
 
   return (
     <>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        {can('invoices.create') && (
+          <NavLink to={type === "bonus" ? "/create-bonus" : "/invoices/create"} className="btn btn-primary">
+            اضافه فاتوره
+          </NavLink>
+        )}
+      </div>
 
-      {can('invoices.create') && (
-        <NavLink to={type=="bonus"? "/create-bonus":"/invoices/create"} className="mb-2 btn btn-primary" >
-          اضافه فاتوره
-        </NavLink>
-      )}
+      {/* قسم الفلاتر (الموردين والتاريخ) */}
+      <div className="row mb-4 bg-white p-3 rounded shadow-sm">
+        <div className="col-lg-4 col-md-6 mb-3">
+          <label className="form-label fw-semibold">المورد</label>
+          <Select
+            isClearable
+            isSearchable
+            placeholder="ابحث عن مورد..."
+            options={suppliers.map(sup => ({
+              value: sup.id,
+              label: sup.name
+            }))}
+            value={
+              suppliers
+                .map(sup => ({ value: sup.id, label: sup.name }))
+                .find(option => option.value == filters.supplier_id) || null
+            }
+            onChange={(selected) =>
+              setFilters({
+                ...filters,
+                supplier_id: selected?.value || ""
+              })
+            }
+          />
+        </div>
+
+        <div className="col-md-3 mb-3">
+          <label className="form-label">من تاريخ</label>
+          <input
+            type="date"
+            className="form-control"
+            value={filters.from}
+            onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+          />
+        </div>
+
+        <div className="col-md-3 mb-3">
+          <label className="form-label">إلى تاريخ</label>
+          <input
+            type="date"
+            className="form-control"
+            value={filters.to}
+            onChange={(e) => setFilters({ ...filters, to: e.target.value })}
+          />
+        </div>
+
+        <div className="col-md-2 d-flex align-items-end mb-3">
+          <button
+            className="btn btn-primary w-100 d-flex justify-content-center align-items-center"
+            onClick={fetchPurchases}
+          >
+            بحث
+          </button>
+        </div>
+      </div>
+
+      {/* بطاقة عرض إجمالي المبالغ المفلترة */}
+      <div className="row mb-4">
+        <div className="col-md-4">
+          <div style={{
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "20px",
+            boxShadow: "0 2px 10px rgba(0,0,0,.08)",
+            borderLeft: "5px solid #198754",
+          }}>
+            <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
+              إجمالي مبلغ الفواتير 
+            </div>
+            <div style={{ fontSize: "24px", fontWeight: "bold", color: "#198754" }}>
+              {Number(totalAmount).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })} جنيه
+            </div>
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
           <ThreeDot color="#8B5E3C" size="medium" />
@@ -84,8 +186,8 @@ function Purchases() {
                 <th>المورد</th>
                 <th>عدد المنتجات</th>
                 <th>المبلغ</th>
-                <th>صوره الفاتوره </th>
-                <th> تاريخ الفاتوره </th>
+                <th>صوره الفاتوره</th>
+                <th>تاريخ الفاتوره</th>
                 {(can('invoices.delete') || can('invoices.edit')) && (
                   <th>الإجراءات</th>
                 )}
@@ -93,7 +195,7 @@ function Purchases() {
             </thead>
             <tbody>
               {purchases.length > 0 ? (
-                purchases.map((purchase, index) => (
+                purchases.map((purchase) => (
                   <tr key={purchase.id}>
                     <td><NavLink to={`/invoices/edit/${purchase.id}`}>#{purchase.id}</NavLink></td>
                     <td>{purchase.supplier?.name}</td>
@@ -110,10 +212,8 @@ function Purchases() {
                     </td>
                     <td>{purchase.date}</td>
                     {(can('invoices.delete') || can('invoices.edit')) && (
-
                       <td>
                         {can('invoices.edit') && (
-
                           <NavLink
                             className="btn btn-ghost btn-sm btn-icon me-1"
                             to={`/invoices/edit/${purchase.id}`}
@@ -121,21 +221,13 @@ function Purchases() {
                             <FiEdit2 />
                           </NavLink>
                         )}
-                        {/* {can('invoices.delete') && (
-                          <button
-                            className="btn btn-danger btn-sm btn-icon mx-2"
-                            onClick={() => deletePurchaseduct(purchase.id)}
-                          >
-                            <FiTrash2 />
-                          </button>
-                        )} */}
                       </td>
                     )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
+                  <td colSpan="7" style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
                     لا يوجد فواتير
                   </td>
                 </tr>
@@ -143,13 +235,9 @@ function Purchases() {
             </tbody>
           </table>
         </div>
-      )
-
-      }
-
-
+      )}
     </>
-  )
+  );
 }
 
-export default Purchases
+export default Purchases;
