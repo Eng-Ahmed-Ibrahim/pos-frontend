@@ -29,6 +29,7 @@ import FinancialReport from './Pages/Reports/Financialreport';
 import PriceCheck from './Pages/PriceCheck';
 import Bonus from './Pages/Purchases/Bonus';
 import PurchaseReturnsReport from './Pages/Reports/PurchaseReturnsReport';
+import Unauthorized from './Pages/Unauthorized';
 
 function App() {
   return (
@@ -42,34 +43,90 @@ function App() {
         {/* protected routes */}
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/categories" element={<Category />} />
-            <Route path="/sub-categories" element={<SubCategory />} />
-            <Route path="/suppliers" element={<Suppliers />} />
-            <Route path="/bonus-page" element={<Purchases />} />
-            <Route path="/create-bonus" element={<Bonus />} />
-            <Route path="/invoices" element={<Purchases />} />
-            <Route path="/invoice/return" element={<PurchaseReturned  />} />
-            <Route path="/invoices/create" element={<CreateInvoice />} />
-            <Route path="/invoices/edit/:id" element={<EditPurchases />} />
-            <Route path="/point-of-sales" element={<PointOfSale />} />
-            <Route path="/returns" element={<Returned />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/roles" element={<Roles />} />
-            <Route path="/units" element={<Units />} />
-            <Route path="/waste" element={<WastePage />} />
-            <Route path="/financial" element={<FinancialReport />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/report/purchases-returns" element={<PurchaseReturnsReport />} />
-            <Route path="/warehouse-inventory" element={<WarehouseInventory />} />
-            <Route path="/cashier-reports" element={<CashierReports />} />
+
+            <Route element={<ProtectedRoute requiredPermission="products.view" />}>
+              <Route path="/products" element={<Products />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="categories.view" />}>
+              <Route path="/categories" element={<Category />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="sub_categories.view" />}>
+              <Route path="/sub-categories" element={<SubCategory />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="suppliers.view" />}>
+              <Route path="/suppliers" element={<Suppliers />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>
+              <Route path="/bonus-page" element={<Purchases />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>
+              <Route path="/create-bonus" element={<Bonus />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>
+              <Route path="/invoices" element={<Purchases />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="invoices.view_returend" />}>
+              <Route path="/invoice/return" element={<PurchaseReturned />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="invoices.create" />}>
+              <Route path="/invoices/create" element={<CreateInvoice />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>
+              <Route path="/invoices/edit/:id" element={<EditPurchases />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="point_of_sale.view" />}>
+              <Route path="/point-of-sales" element={<PointOfSale />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="point_of_sale.return" />}>
+              <Route path="/returns" element={<Returned />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="users.view" />}>
+              <Route path="/users" element={<Users />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="roles.view" />}>
+              <Route path="/roles" element={<Roles />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="view.units" />}>
+              <Route path="/units" element={<Units />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="invoices.view_wasteed" />}>
+              <Route path="/waste" element={<WastePage />} />
+            </Route>
+            <Route element={<ProtectedRoute requiredPermission="reports.view_financial" />}>
+              <Route path="/financial" element={<FinancialReport />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="reports.view_sales_products" />}>
+              <Route path="/reports" element={<Reports />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="reports.purchases_returns.view" />}>
+              <Route path="/report/purchases-returns" element={<PurchaseReturnsReport />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="reports.view_warehouse_inventory" />}>
+              <Route path="/warehouse-inventory" element={<WarehouseInventory />} />
+            </Route>
+
+            <Route element={<ProtectedRoute requiredPermission="reports.view_sales_cashier" />}>
+              <Route path="/cashier-reports" element={<CashierReports />} />
+            </Route>
+
             <Route path="/settings" element={<Settings />} />
 
             <Route path="/sales/:id/print" element={<SaleInvoicePrint />} />
           </Route>
-            <Route path="/price-check" element={<PriceCheck />} />
+          <Route path="/price-check" element={<PriceCheck />} />
 
         </Route>
       </Routes>

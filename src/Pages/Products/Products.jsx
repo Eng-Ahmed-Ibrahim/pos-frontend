@@ -38,12 +38,12 @@ function Products() {
     const [editSubCategoryId, setEditSubCategoryId] = useState('');
     const { can } = useAuth();
     const token = localStorage.getItem("token");
-const printProductSticker = (prod) => {
-    // إنشاء نافذة طباعة جديدة مخفية
-    const printWindow = window.open('', '_blank', 'width=400,height=400');
-    
-    // تصميم محتوى الاستيكر ليتناسب مع طابعات الباركود الحرارية الصغيرة
-    const htmlContent = `
+    const printProductSticker = (prod) => {
+        // إنشاء نافذة طباعة جديدة مخفية
+        const printWindow = window.open('', '_blank', 'width=400,height=400');
+
+        // تصميم محتوى الاستيكر ليتناسب مع طابعات الباركود الحرارية الصغيرة
+        const htmlContent = `
         <!DOCTYPE html>
         <html lang="ar" dir="rtl">
         <head>
@@ -138,9 +138,9 @@ const printProductSticker = (prod) => {
         </html>
     `;
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-};
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    };
     const fetchProducts = async (pageNumber = 1) => {
         try {
             setLoading(true);

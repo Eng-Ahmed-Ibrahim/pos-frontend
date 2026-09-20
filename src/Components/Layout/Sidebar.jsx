@@ -186,7 +186,7 @@ function Sidebar({ isOpen, onClose }) {
                       </NavLink>
                     )} 
                     {can('reports.purchases_returns.view') && (
-                      <NavLink to="/reports/purchases-returns" onClick={onClose} className="nav-item nav-sub-item">
+                      <NavLink to="/report/purchases-returns" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
                         تقارير مرتجعات 
                       </NavLink>

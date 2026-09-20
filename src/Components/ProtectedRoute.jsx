@@ -4,9 +4,9 @@ import { useAuth } from "@/context/AuthContext";
 const PRICE_CHECKER_PERMISSION = "price-checker.view";
 const PRICE_CHECKER_ROUTE = "/price-check";
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ requiredPermission }) => {
     const token = localStorage.getItem("token");
-    const { user, permissions, loading, roles } = useAuth();
+    const { user, permissions, loading, roles,can } = useAuth();
     const location = useLocation();
 
     if (!token) {
@@ -76,6 +76,9 @@ const ProtectedRoute = () => {
 
     if (isPriceCheckerOnly && location.pathname !== PRICE_CHECKER_ROUTE) {
         return <Navigate to={PRICE_CHECKER_ROUTE} replace />;
+    }
+    if (requiredPermission && !can(requiredPermission)) {
+        return <Navigate to="/unauthorized" replace />;
     }
 
     return <Outlet />;
