@@ -127,7 +127,6 @@ function App() {
             <Route path="/sales/:id/print" element={<SaleInvoicePrint />} />
           </Route>
           <Route path="/price-check" element={<PriceCheck />} />
-
         </Route>
       </Routes>
     </AuthProvider>
