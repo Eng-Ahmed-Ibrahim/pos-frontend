@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom';
+import { apiFetch } from "@/Components/apiFetch";
+
 import {
   MdDashboard,
   MdShoppingCart,
@@ -28,9 +30,38 @@ function Sidebar({ isOpen, onClose }) {
     localStorage.clear();
     window.location.href = "/login";
   };
-  
+
   const name = localStorage.getItem("name");
   const role = localStorage.getItem("role");
+  const handleDownload = async (e) => {
+    e.preventDefault();
+    if (onClose) onClose();
+
+    try {
+      const response = await apiFetch('productskg/export-excel');
+ 
+      if (!response || !response.ok) {
+        console.error('فشل تحميل الملف');
+        return;
+      }
+
+      // استخراج الـ Blob بشكل صحيح من الـ Fetch Response
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'scale_products.xlsx');
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading the file:', error);
+    }
+  };
+
 
   return (
     <>
@@ -52,8 +83,8 @@ function Sidebar({ isOpen, onClose }) {
           {can('dashboard.view') && (
             <div className="nav-section">
               <div className="nav-label">الرئيسية</div>
-              <NavLink 
-                to="/" 
+              <NavLink
+                to="/"
                 onClick={onClose}
                 className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
               >
@@ -64,37 +95,37 @@ function Sidebar({ isOpen, onClose }) {
           )}
 
           <div className="nav-section">
-            {( can('point_of_sale.view') || can('point_of_sale.return') ) && (
+            {(can('point_of_sale.view') || can('point_of_sale.return')) && (
               <>
                 <div className="nav-label">المبيعات</div>
-                  <div className="nav-group">
-                    <button
-                      type="button"
-                      className="nav-item nav-group-toggle"
-                      onClick={() => setDropMenu(currentSubMenu === 'sales' ? null : 'sales')}
-                    >
-                      <span className="icon"><MdShoppingCart /></span>
-                      المبيعات
-                      <MdKeyboardArrowDown className={`arrow ${currentSubMenu === 'sales' ? 'open' : ''}`} />
-                    </button>
+                <div className="nav-group">
+                  <button
+                    type="button"
+                    className="nav-item nav-group-toggle"
+                    onClick={() => setDropMenu(currentSubMenu === 'sales' ? null : 'sales')}
+                  >
+                    <span className="icon"><MdShoppingCart /></span>
+                    المبيعات
+                    <MdKeyboardArrowDown className={`arrow ${currentSubMenu === 'sales' ? 'open' : ''}`} />
+                  </button>
 
-                    <div className={`nav-subgroup ${currentSubMenu === 'sales' ? 'open' : ''}`}>
-                      <div className="nav-subgroup-inner">
-                        {can('point_of_sale.view') && (
-                          <NavLink to="/point-of-sales" onClick={onClose} className="nav-item nav-sub-item">
-                            <span className="icon"><FaLeftLong /></span>
-                            نقطة البيع
-                          </NavLink>
-                        )}
-                        {can('point_of_sale.return') && (
-                          <NavLink to="/returns" onClick={onClose} className="nav-item nav-sub-item">
-                            <span className="icon"><FaLeftLong /></span>
-                            مرتجعات المبيعات
-                          </NavLink>
-                        )}
-                      </div>
+                  <div className={`nav-subgroup ${currentSubMenu === 'sales' ? 'open' : ''}`}>
+                    <div className="nav-subgroup-inner">
+                      {can('point_of_sale.view') && (
+                        <NavLink to="/point-of-sales" onClick={onClose} className="nav-item nav-sub-item">
+                          <span className="icon"><FaLeftLong /></span>
+                          نقطة البيع
+                        </NavLink>
+                      )}
+                      {can('point_of_sale.return') && (
+                        <NavLink to="/returns" onClick={onClose} className="nav-item nav-sub-item">
+                          <span className="icon"><FaLeftLong /></span>
+                          مرتجعات المبيعات
+                        </NavLink>
+                      )}
                     </div>
                   </div>
+                </div>
               </>
             )}
 
@@ -170,7 +201,7 @@ function Sidebar({ isOpen, onClose }) {
                     {can('reports.view_sales_cashier') && (
                       <NavLink to="/cashier-reports" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
-                        تقرير مبيعات 
+                        تقرير مبيعات
                       </NavLink>
                     )}
                     {can('reports.view_warehouse_inventory') && (
@@ -184,11 +215,11 @@ function Sidebar({ isOpen, onClose }) {
                         <span className="icon"><FaLeftLong /></span>
                         الماليات
                       </NavLink>
-                    )} 
+                    )}
                     {can('reports.purchases_returns.view') && (
                       <NavLink to="/report/purchases-returns" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
-                        تقارير مرتجعات 
+                        تقارير مرتجعات
                       </NavLink>
                     )}
                   </div>
@@ -209,9 +240,9 @@ function Sidebar({ isOpen, onClose }) {
               {can('view.units') && (
 
                 <NavLink to="/units" onClick={onClose} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                <span className="icon"><MdInventory /></span>
-                الوحدات
-              </NavLink>
+                  <span className="icon"><MdInventory /></span>
+                  الوحدات
+                </NavLink>
               )}
               {can('categories.view') && (
                 <NavLink to="/categories" onClick={onClose} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
@@ -224,6 +255,16 @@ function Sidebar({ isOpen, onClose }) {
                   <span className="icon"><MdLayers /></span>
                   الفئات الفرعية
                 </NavLink>
+              )}
+              {can('products.download_kg_products') && (
+                <a
+                  href="#"
+                  onClick={handleDownload}
+                  className="nav-item"
+                >
+                  <span className="icon"><MdLayers /></span>
+                  تحميل منتجات الميزان
+                </a>
               )}
             </div>
           )}

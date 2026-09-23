@@ -16,7 +16,7 @@ function Purchases() {
   const [loading, setLoading] = useState(false);
   const { can } = useAuth();
   const [searchParams] = useSearchParams();
-  const type = searchParams.get('type') || 'normal'; 
+  const type = searchParams.get('type') || 'normal';
   const location = useLocation();
 
   const today = new Date().toISOString().split("T")[0];
@@ -24,7 +24,8 @@ function Purchases() {
   const [filters, setFilters] = useState({
     supplier_id: "",
     from: today,
-    to: today,   
+    to: today,
+    search: "",
   });
 
   useEffect(() => {
@@ -39,15 +40,16 @@ function Purchases() {
         supplier_id: filters.supplier_id,
         from: filters.from,
         to: filters.to,
+        search: filters.search
       }).toString();
 
       const response = await apiFetch(`purchases?${queryParams}`, {
         method: "GET",
       });
       const data = await response.json();
-      
+
       setPurchases(data.purchases);
-      setTotalAmount(data.total_amount || 0); // استقبال الإجمالي من الـ API
+      setTotalAmount(data.total_amount || 0);
       if (data.suppliers) {
         setSuppliers(data.suppliers);
       }
@@ -57,7 +59,60 @@ function Purchases() {
       setLoading(false);
     }
   };
+  const handleDownloadPdf = async () => {
+    try {
+      setLoading(true);
 
+      const queryParams = new URLSearchParams({
+        type: type,
+        supplier_id: filters.supplier_id || "",
+        from: filters.from || "",
+        to: filters.to || "",
+        search: filters.search || ""
+      }).toString();
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${SERVER_BASE}/api/v1/export-pdf/purchases?${queryParams}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/pdf"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("فشل في جلب الملف من السيرفر");
+      }
+
+      const blob = await response.blob();
+
+      if (blob.size === 0) {
+        throw new Error("الملف المحمل فارغ");
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `تقرير_الموردين_${filters.from || 'الكل'}_إلى_${filters.to || 'الكل'}.pdf`);
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error("PDF Download Error:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'خطأ',
+        text: err.message || 'حدث خطأ أثناء تنزيل ملف الـ PDF',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const deletePurchaseduct = async (id) => {
     const result = await Swal.fire({
       title: "هل أنت متأكد؟",
@@ -92,11 +147,31 @@ function Purchases() {
             اضافه فاتوره
           </NavLink>
         )}
-      </div>
 
+        {can('invoices.download_report') && (
+
+          <button
+            onClick={handleDownloadPdf}
+            className="btn btn-success d-flex align-items-center gap-2"
+            disabled={loading}
+          >
+            تحميل تقرير الموردين 
+          </button>
+        )}
+      </div>
       {/* قسم الفلاتر (الموردين والتاريخ) */}
       <div className="row mb-4 bg-white p-3 rounded shadow-sm">
-        <div className="col-lg-4 col-md-6 mb-3">
+        <div className="col-md-3 mb-3">
+          <label className="form-label">بحث برقم الفاتوره</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="بحث"
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          />
+        </div>
+        <div className="col-lg-3 col-md-6 mb-3">
           <label className="form-label fw-semibold">المورد</label>
           <Select
             isClearable
@@ -140,12 +215,12 @@ function Purchases() {
           />
         </div>
 
-        <div className="col-md-2 d-flex align-items-end mb-3">
+        <div className="col-md-12 d-flex align-items-end mb-3">
           <button
             className="btn btn-primary w-100 d-flex justify-content-center align-items-center"
             onClick={fetchPurchases}
           >
-            بحث
+            فلتره
           </button>
         </div>
       </div>
@@ -161,7 +236,7 @@ function Purchases() {
             borderLeft: "5px solid #198754",
           }}>
             <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
-              إجمالي مبلغ الفواتير 
+              إجمالي مبلغ الفواتير
             </div>
             <div style={{ fontSize: "24px", fontWeight: "bold", color: "#198754" }}>
               {Number(totalAmount).toLocaleString("en-US", {
