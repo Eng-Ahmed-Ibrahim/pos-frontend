@@ -60,7 +60,7 @@ function App() {
             <Route element={<ProtectedRoute requiredPermission="suppliers.view" />}>
               <Route path="/suppliers" element={<Suppliers />} />
             </Route>
-            <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>
+            <Route element={<ProtectedRoute requiredPermission="invoices.view_bonus" />}>
               <Route path="/bonus-page" element={<Purchases />} />
             </Route>
             <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>

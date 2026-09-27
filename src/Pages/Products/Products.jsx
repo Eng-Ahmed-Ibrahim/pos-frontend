@@ -39,103 +39,122 @@ function Products() {
     const { can } = useAuth();
     const token = localStorage.getItem("token");
     const printProductSticker = (prod) => {
-        // إنشاء نافذة طباعة جديدة مخفية
-        const printWindow = window.open('', '_blank', 'width=400,height=400');
+        if (!prod?.barcode) {
+            Swal.fire({
+                toast: true,
+                position: "top-start",
+                icon: "warning",
+                title: "لا يوجد باركود لهذا المنتج",
+                showConfirmButton: false,
+                timer: 2500,
+            });
+            return;
+        }
 
-        // تصميم محتوى الاستيكر ليتناسب مع طابعات الباركود الحرارية الصغيرة
+        const canvas = document.createElement("canvas");
+        try {
+            JsBarcode(canvas, String(prod.barcode), {
+                format: "CODE128",   
+                width: 2,
+                height: 40,
+                displayValue: true,
+                fontSize: 12,
+                margin: 10,
+            });
+        } catch (e) {
+            console.error("Barcode Generation Error:", e);
+        }
+
+        // 2. تحويل الباركود إلى صورة Base64 Data URL محلياً
+        const barcodeDataUrl = canvas.toDataURL("image/png");
+
+        // 3. فتح نافذة الطباعة واستخدام صورة الباركود المولدة محلياً
+        const printWindow = window.open('', '_blank', 'width=500,height=500');
+
         const htmlContent = `
-        <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>طباعة استيكر - ${prod.name}</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    margin: 0;
-                    padding: 5px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                }
-                .sticker {
-                    width: 50mm; /* عرض الاستيكر القياسي، يمكنك تعديله حسب مقاس رول الباركود لديك */
-                    border: 1px solid #000;
-                    padding: 5px;
-                    text-align: center;
-                    box-sizing: border-box;
-                    background: #fff;
-                }
-                .product-name {
-                    font-size: 14px;
-                    font-weight: bold;
-                    margin-bottom: 5px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-                .price-section {
-                    font-size: 16px;
-                    font-weight: bold;
-                    margin-bottom: 5px;
-                }
-                .currency {
-                    font-size: 12px;
-                    margin-right: 3px;
-                }
-                .barcode-container {
-                    margin-top: 5px;
-                }
-                .barcode-container svg {
-                    max-width: 100%;
-                    height: 35px;
-                }
-                .product-id {
-                    font-size: 10px;
-                    margin-top: 2px;
-                }
-                @media print {
-                    body {
-                        margin: 0;
-                        padding: 0;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="sticker">
-                <div class="product-name">${prod.name}</div>
-                <div class="price-section">
-                    ${prod.price} <span class="currency">EGP</span>
-                </div>
-                <div class="barcode-container">
-                    <!-- توليد باركود نصي أو رقمي مطابق للـ bar code الخاص بالمنتج -->
-                    <svg id="barcode"></svg>
-                </div>
-                <div class="product-id">${prod.barcode || ''}</div>
-            </div>
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>طباعة استيكر - ${prod.name}</title>
+        <style>
+            @page {
+                size: 50mm 30mm;
+                margin: 0;
+            }
+            * {
+                box-sizing: border-box;
+            }
 
-            <!-- استدعاء مكتبة JsBarcode لطباعة الباركود كرسم داخل النافذة -->
-            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-            <script>
-                window.onload = function() {
-                    try {
-                        JsBarcode("#barcode", "${prod.barcode}", {
-                            format: "CODE128",
-                            width: 1.2,
-                            height: 30,
-                            displayValue: false
-                        });
-                    } catch(e) {
-                        console.log(e);
-                    }
-                    window.print();
-                    window.close();
-                };
-            </script>
-        </body>
-        </html>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                margin: 0;
+                padding: 2mm;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100vh;
+                background: #fff;
+            }
+            .sticker {
+                width: 100%;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .product-name {
+                font-size: 11px;
+                font-weight: bold;
+                line-height: 1.2;
+                max-width: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin-bottom: 2px;
+            }
+            .price-section {
+                font-size: 13px;
+                font-weight: 800;
+                margin-bottom: 2px;
+            }
+            .currency {
+                font-size: 9px;
+            }
+            .barcode-img {
+                max-width: 98%;
+                height: auto;
+            }
+            @media print {
+                body {
+                    height: auto;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sticker">
+            <div class="product-name">${prod.name}</div>
+            <div class="price-section">
+                ${prod.price} <span class="currency">ج.م</span>
+            </div>
+            <div>
+                <!-- استخدام صورة الباركود المولدة محلياً بدون إنترنت -->
+                <img src="${barcodeDataUrl}" class="barcode-img" />
+            </div>
+        </div>
+
+        <script>
+            window.onload = function() {
+                window.print();
+                window.close();
+            };
+        </script>
+    </body>
+    </html>
     `;
 
         printWindow.document.write(htmlContent);

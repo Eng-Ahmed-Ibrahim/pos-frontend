@@ -378,7 +378,7 @@ function PointOfSale() {
         body: JSON.stringify({
           customer_name: customerName || null,
           amount_paid: amountPaid === '' ? null : Number(amountPaid),
-          payment_method : paymentMethod,
+          payment_method: paymentMethod,
           items: items.map((i) => ({
             product_id: i.product_id,
             quantity: i.quantity,
@@ -399,8 +399,10 @@ function PointOfSale() {
           showConfirmButton: false,
           timer: 3000,
         });
-        console.log("json " ,json.invoice_id);
+        console.log("json ", json.invoice_id);
         setPaymentMethod("cash")
+        resetSaleForm()
+
         setInvoiceId(json.invoice_id)
       } else {
         Swal.fire({
@@ -427,7 +429,6 @@ function PointOfSale() {
       });
     } finally {
       setSubmitting(false)
-      resetSaleForm()
     }
   }
 
@@ -514,7 +515,7 @@ function PointOfSale() {
                     step="0.01"
                     readOnly
                     value={itemPrice}
-                
+
                   />
                 </div>
                 <div className="field action-field">
@@ -601,7 +602,7 @@ function PointOfSale() {
             <div className="field">
               <label>طريقه الدفع </label>
               <select class="form-select" aria-label="Default select example"
-              value={paymentMethod}
+                value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               >
                 <option disabled>-- اختر طريقه الدفع --</option>

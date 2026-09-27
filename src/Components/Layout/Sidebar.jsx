@@ -149,7 +149,7 @@ function Sidebar({ isOpen, onClose }) {
                         فواتير
                       </NavLink>
                     )}
-                    {can('invoices.view') && (
+                    {can('invoices.view_bonus') && (
                       <NavLink to="/bonus-page?type=bonus" onClick={onClose} className="nav-item nav-sub-item">
                         <span className="icon"><FaLeftLong /></span>
                         البونص
