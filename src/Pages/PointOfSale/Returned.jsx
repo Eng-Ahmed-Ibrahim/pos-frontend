@@ -122,9 +122,9 @@ function Returned() {
             quantity: returnQuantities[item.id],
           })),
         }),
-      })
+      }) 
       const json = await res.json()
-      if (res.ok && json.status) {
+      if (json.status) {
         Swal.fire({
           toast: true,
           position: 'top-start',

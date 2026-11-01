@@ -126,17 +126,7 @@ export default function FinancialReport() {
                     </span>
                   ),
                 },
-                {
-                  title: `قيمة البضاعة آخر الفترة `,
-                  dataIndex: "end_value",
-                  key: "end_value",
-                  align: "center",
-                  render: (v) => (
-                    <span className="font-semibold">
-                      {Number(v).toLocaleString()} ج.م
-                    </span>
-                  ),
-                },
+    
                 // {
                 //   title: "التغيير الصافي",
                 //   dataIndex: "value_change",
@@ -182,6 +172,17 @@ export default function FinancialReport() {
                   key: "sold_cost_value",
                   align: "center",
                   render: (v) => `${Number(v).toLocaleString()} ج.م`,
+                },
+                {
+                  title: `قيمة البضاعة آخر الفترة `,
+                  dataIndex: "end_value",
+                  key: "end_value",
+                  align: "center",
+                  render: (v) => (
+                    <span className="font-semibold">
+                      {Number(v).toLocaleString()} ج.م
+                    </span>
+                  ),
                 },
               ]}
               dataSource={[{ key: "summary_row", ...summary }]}

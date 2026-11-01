@@ -6,6 +6,7 @@ function CashierReports() {
     const [sales, setSales] = useState([]);
     const [totalCashPrice, setTotalCashPrice] = useState(0);
     const [totalVisaPrice, setTotalVisaPrice] = useState(0);
+    const [totalReturn, setTotalReturn] = useState(0);
     const [totalPrice, setTotalPrice] = useState(0);
     const today = new Date().toISOString().split("T")[0];
 
@@ -28,6 +29,7 @@ function CashierReports() {
             setSales(data.data.sales);
             setTotalCashPrice(data.data.total_cash_price)
             setTotalVisaPrice(data.data.total_visa_price)
+            setTotalReturn(data.data.total_return)
             setTotalPrice(
                 Number(data.data.total_cash_price) + Number(data.data.total_visa_price)
             ); 
@@ -201,6 +203,46 @@ function CashierReports() {
                         <div>
                             فيزا:{" "}
                             {Number(totalVisaPrice).toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}{" "}
+                            جنيه
+                        </div>
+
+
+                    </div>
+
+                </div>
+                <div
+                    style={{
+                        background: "#fff",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        minWidth: "250px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,.08)",
+                        borderLeft: "5px solid #198754",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "14px",
+                            color: "#6c757d",
+                            marginBottom: "8px",
+                        }}
+                    >
+                        إجمالي المبيعات
+                    </div>
+
+                    <div
+                        style={{
+                            fontSize: "30px",
+                            fontWeight: "bold",
+                            color: "#198754",
+                        }}
+                    >
+                        <div>
+                            مرتجعات:{" "}
+                            {Number(totalReturn).toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                             })}{" "}
