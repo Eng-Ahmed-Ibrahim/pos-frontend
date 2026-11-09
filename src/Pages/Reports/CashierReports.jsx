@@ -137,7 +137,7 @@ function CashierReports() {
                     style={{
                         background: "#fff",
                         borderRadius: "12px",
-                        padding: "20px",
+                        padding: "14px",
                         minWidth: "250px",
                         boxShadow: "0 2px 10px rgba(0,0,0,.08)",
                         borderLeft: "5px solid #198754",
@@ -177,7 +177,7 @@ function CashierReports() {
                     style={{
                         background: "#fff",
                         borderRadius: "12px",
-                        padding: "20px",
+                        padding: "14px",
                         minWidth: "250px",
                         boxShadow: "0 2px 10px rgba(0,0,0,.08)",
                         borderLeft: "5px solid #198754",
@@ -217,7 +217,7 @@ function CashierReports() {
                     style={{
                         background: "#fff",
                         borderRadius: "12px",
-                        padding: "20px",
+                        padding: "14px",
                         minWidth: "250px",
                         boxShadow: "0 2px 10px rgba(0,0,0,.08)",
                         borderLeft: "5px solid #198754",
@@ -258,7 +258,7 @@ function CashierReports() {
                     style={{
                         background: "#fff",
                         borderRadius: "12px",
-                        padding: "20px",
+                        padding: "14px",
                         minWidth: "250px",
                         boxShadow: "0 2px 10px rgba(0,0,0,.08)",
                         borderLeft: "5px solid #198754",

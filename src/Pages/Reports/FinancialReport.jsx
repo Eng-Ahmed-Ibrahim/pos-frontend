@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { DatePicker, Button, Table, Card, Spin, message } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, FilePdfOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { apiFetch } from "@/Components/apiFetch";
 
@@ -47,6 +47,42 @@ export default function FinancialReport() {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!range || range.length !== 2) {
+      message.warning("اختار الفترة الأول");
+      return;
+    }
+    const start_at = range[0].format("YYYY-MM-DD");
+    const end_at = range[1].format("YYYY-MM-DD");
+
+    try {
+      message.loading({ content: "جاري تحميل الملف...", key: "pdfLoading" });
+      
+      const response = await apiFetch(`reports/financial/pdf?start_at=${start_at}&end_at=${end_at}`);
+      
+      if (!response.ok) {
+        throw new Error("فشل تحميل الملف");
+      }
+
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `تقرير المالي-${start_at}-to-${end_at}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success({ content: "تم تحميل التقرير بنجاح", key: "pdfLoading", duration: 2 });
+    } catch (err) {
+      message.error({ content: "حدث خطأ أثناء تحميل الملف", key: "pdfLoading", duration: 2 });
+      console.error(err);
+    }
+  };
+
   const columns = [
     {
       title: "المنتج",
@@ -79,30 +115,43 @@ export default function FinancialReport() {
       align: "center",
       render: (v) => `${Number(v).toLocaleString()} ج.م`,
     },
-
   ];
 
   return (
     <div className="p-6" dir="rtl">
       <h1 className="text-2xl font-bold mb-4">التقارير المالية</h1>
 
-      {/* فلتر التاريخ */}
-      <Card className="mb-10 ">
-        <div className="flex items-center gap-3 flex-wrap">
-          <RangePicker
-            value={range}
-            onChange={setRange}
-            format="YYYY-MM-DD"
-            allowClear={false}
-          />
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={fetchReport}
-            loading={loading}
-          >
-            عرض التقرير
-          </Button>
+      {/* فلتر التاريخ وزر التحميل */}
+      <Card className="mb-10">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <RangePicker
+              value={range}
+              onChange={setRange}
+              format="YYYY-MM-DD"
+              allowClear={false}
+            />
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={fetchReport}
+              loading={loading}
+            >
+              عرض التقرير
+            </Button>
+          </div>
+
+          {summary && (
+            <Button
+              type="default"
+              danger
+              icon={<FilePdfOutlined />}
+              onClick={handleDownloadPdf}
+              className="border-red-500 text-red-500 hover:bg-red-50"
+            >
+              تحميل PDF
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -126,25 +175,6 @@ export default function FinancialReport() {
                     </span>
                   ),
                 },
-    
-                // {
-                //   title: "التغيير الصافي",
-                //   dataIndex: "value_change",
-                //   key: "value_change",
-                //   align: "center",
-                //   render: (v) => (
-                //     <span
-                //       className={
-                //         v >= 0
-                //           ? "text-green-600 font-semibold"
-                //           : "text-red-600 font-semibold"
-                //       }
-                //     >
-                //       {v >= 0 ? "+" : ""}
-                //       {Number(v).toLocaleString()} ج.م
-                //     </span>
-                //   ),
-                // },
                 {
                   title: "قيمة المشتريات خلال الفترة",
                   dataIndex: "purchases_value",
